@@ -38,15 +38,13 @@ export function AccountView(props: { account: Account, session: SessionToken }):
 export function ChangePasswordForm({ values, errors }: FormValues): HtmlEscapedString | Promise<HtmlEscapedString> {
 	return MainReduced(html`
 		<form action="/account/change-password" method="post">
-			<article>
-				<header>
-					<h2>Change Password</h2>
-				</header>
+			<article class="stack">
+				<h1>Change Password</h1>
 				${errors.length > 0 ? html`<ul class="error" style="color:red;">${errors.map(err => html`<li>${err.message}</li>`)}</ul>` : ''}
 				<label for="password">New Password:</label>
-				<input type="text" name="password" id="password" value="${values.password}" placeholder="New Password" required>
+				<input style="--spacing-md: 0.5rem;" type="text" name="password" id="password" value="${values.password}" placeholder="New Password" required>
 				<label for="current-password">Current Password:</label>
-				<input type="text" name="currentPassword" id="current-password" value="${values.currentPassword}" placeholder="Current Password" required>
+				<input style="--spacing-md: 0.5rem;" type="text" name="currentPassword" id="current-password" value="${values.currentPassword}" placeholder="Current Password" required>
 				<footer>
 					<a href="/account">Cancel</a>
 					<button style="width:auto;" type="submit">Change Password</button>
@@ -60,18 +58,16 @@ export function ChangePasswordForm({ values, errors }: FormValues): HtmlEscapedS
 export function ChangeEmailForm({ values, errors }: FormValues): HtmlEscapedString | Promise<HtmlEscapedString> {
 	return MainReduced(html`
 		<form action="/account/change-email" method="post">
-			<article>
-				<header>
-					<h2>Change Email Address</h2>
-				</header>
+			<article class="stack">
+				<h1>Change Email Address</h1>
 				${errors.length > 0 ? html`<ul class="error" style="color:red;">${errors.map(err => html`<li>${err.message}</li>`)}</ul>` : ''}
 				<label for="password">New Email:</label>
-				<input type="text" name="email" id="email" value="${values.email}" placeholder="New Email" required>
+				<input style="--spacing-md: 0.5rem;" type="text" name="email" id="email" value="${values.email}" placeholder="New Email" required>
 				<label for="current-password">Current Password:</label>
-				<input type="text" name="currentPassword" id="current-password" value="${values.currentPassword}" placeholder="Current Password" required>
+				<input style="--spacing-md: 0.5rem;" type="text" name="currentPassword" id="current-password" value="${values.currentPassword}" placeholder="Current Password" required>
 				<footer>
 					<a href="/account">Cancel</a>
-					<button style="width:auto;" type="submit">Change Email</button>
+					<button type="submit">Change Email</button>
 				</footer>
 			</article>
 		</form>

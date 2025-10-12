@@ -6,7 +6,7 @@ import { MainReduced } from './main.js';
 export function AdminView(props: { accounts: Array<Account>, query: string | null }): HtmlEscapedString | Promise<HtmlEscapedString> {
 	return MainReduced(html`
 		<h1>Admin Dashboard</h1>
-		<form action="/admin" method="get" style="display:flex">
+		<form action="/admin" method="get">
 			<input type="search" name="q" placeholder="Search by ID, email, role" value="${props.query || ''}">
 		</form>
 		${props.accounts.length === 0 ? html`<p>No accounts found.</p>` : html`

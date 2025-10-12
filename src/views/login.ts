@@ -7,7 +7,7 @@ export function LoginForm({ values, errors }: FormValues): HtmlEscapedString | P
 	const siteMetaData = { title: 'Login', description: 'Login to your account' };
 	return Main(html`
 		<h1>Login</h1>
-		<form method="POST" action="/login">
+		<form method="POST" action="/login" class="stack">
 			<input type="text" name="email" value="${values.email || ""}" placeholder="Email" aria-invalid="${!!errors.find(e => e.field === 'email')}"/>
 			${errors.find(e => e.field === 'email') ? html`<div class="error" style="color:red;">${errors.find(e => e.field === 'email')?.message}</div>` : ''}
 			<input type="password" name="password" placeholder="Password" aria-invalid="${!!errors.find(e => e.field === 'password')}"/>

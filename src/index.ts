@@ -98,7 +98,7 @@ app.post('/login', async c => {
 	}
 
 	if (!body.password || typeof body.password !== 'string' || body.password.length < 6) {
-		return c.html(LoginForm({ values, errors: [{ field: 'email', message: 'Please provide your password' }] }));
+		return c.html(LoginForm({ values, errors: [{ field: 'password', message: 'Please provide your password' }] }));
 	}
 
 	const account = getAccountByEmail(values.email as string);

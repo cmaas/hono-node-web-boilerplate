@@ -44,3 +44,8 @@ Open [localhost:3000](http://localhost:3000/) in your browser and sign up a new 
 - Configurable timeouts
 - cron jobs to delete expired tokens
 - integrating an SMTP service to actually send emails
+
+## Changelog
+
+### 1.1.0 (2025-10-12)
+* Removed Pico CSS for a very lightweight custom stylesheet

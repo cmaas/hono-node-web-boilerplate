@@ -6,9 +6,10 @@ import { Main } from './main.js';
 
 export function SignupForm({ values, errors }: FormValues): HtmlEscapedString | Promise<HtmlEscapedString> {
 	return Main(html`
-		<form method="POST" action="/signup">
+		<h1>Create an account</h1>
+		<form method="POST" action="/signup" class="stack">
 			${errors.length > 0 ? html`<ul class="error" style="color:red;">${errors.map(err => html`<li>${err.message}</li>`)}</ul>` : ''}
-			<fieldset>
+			<fieldset class="stack">
 				<input type="text" name="email" placeholder="Email" value="${values.email || ""}" aria-invalid="${!!errors.find(e => e.field === 'email')}"/>
 				<input type="password" name="password" placeholder="Password" value="${values.password || ""}" aria-invalid="${!!errors.find(e => e.field === 'password')}"/>
 				<label>

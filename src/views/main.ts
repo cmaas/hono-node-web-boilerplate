@@ -6,7 +6,7 @@ import { Layout, type SiteMetaData } from './layout.js';
 export function Main(children: HtmlEscapedString | Promise<HtmlEscapedString>, siteMetaData: SiteMetaData, props?: { account: Account }): HtmlEscapedString | Promise<HtmlEscapedString> {
 	return Layout(html`
 		<header>
-			<nav>
+			<nav class="container">
 				<ul>
 					<li><a href="/">Home</a></li>
 					${props?.account
@@ -15,9 +15,10 @@ export function Main(children: HtmlEscapedString | Promise<HtmlEscapedString>, s
 				</ul>
 			</nav>
 		</header>
-		<main>
+		<main class="stack container">
 			${raw(children)}
 		</main>
+		<footer class="container">Created with <a target="_blank" href="https://github.com/cmaas/hono-node-web-boilerplate?ref=template-footer">Hono Node Web Boilerplate</a></footer>
 		`, siteMetaData
 	);
 }
@@ -25,15 +26,16 @@ export function Main(children: HtmlEscapedString | Promise<HtmlEscapedString>, s
 export function MainReduced(children: HtmlEscapedString | Promise<HtmlEscapedString>, siteMetaData: SiteMetaData): HtmlEscapedString | Promise<HtmlEscapedString> {
 	return Layout(html`
 		<header>
-			<nav>
+			<nav class="container">
 				<ul>
 					<li><a href="/">Home</a></li>
 				</ul>
 			</nav>
 		</header>
-		<main>
+		<main class="stack container">
 			${raw(children)}
 		</main>
+		<footer class="container">Created with <a target="_blank" href="https://github.com/cmaas/hono-node-web-boilerplate?ref=template-footer">Hono Node Web Boilerplate</a></footer>
 		`, siteMetaData
 	);
 }
