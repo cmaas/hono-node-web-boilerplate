@@ -174,9 +174,6 @@
 		padding: var(--spacing-md);
 	}
 
-	.nogap {
-		--spacing-md: 0.5rem;
-	}
 }
 
 /* --- BASE: Push footer down --- */
