@@ -146,7 +146,7 @@ app.post('/signup', async (c) => {
 	// but never given to the user. this reduces signup friction and makes mostly sense with long-lived sessions.
 	// if the user wants to set their password, they must use the password reset flow.
 	if (values.password && values.password.length > 0 && !satisfiesPasswordPolicy(values.password)) {
-		return c.html(SignupForm({ values, errors: [{ field: 'password', message: 'Password must have at least 8 characters' }] }));
+		return c.html(SignupForm({ values, errors: [{ field: 'password', message: 'Password must have at least 8 characters and should not be trivial' }] }));
 	}
 
 	const account = await createAccount(values.email);

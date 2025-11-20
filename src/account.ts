@@ -80,7 +80,7 @@ app.post('/change-password', requireAccount, async (c) => {
 		return c.html(ChangePasswordForm({ values: { password, currentPassword }, errors: [{ field: 'currentPassword', message: 'Current password is incorrect' }] }));
 	}
 	if (!satisfiesPasswordPolicy(password)) {
-		return c.html(ChangePasswordForm({ values: { password, currentPassword }, errors: [{ field: 'password', message: 'New password must be at least 8 characters long' }] }));
+		return c.html(ChangePasswordForm({ values: { password, currentPassword }, errors: [{ field: 'password', message: 'New password must have at least 8 characters and should not be trivial' }] }));
 	}
 
 	const result = await updateAccountPassword(account.id, password);

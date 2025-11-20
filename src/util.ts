@@ -53,5 +53,8 @@ export function satisfiesPasswordPolicy(password: string): boolean {
 	if (password.trim().length < 8) {
 		return false;
 	}
+	if (['asdfasdf', 'password', '12345678', 'qwertyuiop'].includes(password.trim().toLowerCase())) {
+		return false;
+	}
 	return true;
 }

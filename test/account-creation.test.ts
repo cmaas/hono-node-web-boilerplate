@@ -108,15 +108,18 @@ describe('Account Creation Tests', () => {
 		test('satisfiesPasswordPolicy should validate passwords correctly', () => {
 			const validPasswords = [
 				'password123',
-				'12345678',
+				'123456789',
 				'a'.repeat(8)
 			];
 
 			const invalidPasswords = [
 				'',
 				'short',
-				'1234567', // 7 characters
-				'   ' // Only whitespace
+				'1234567', 	// 7 characters
+				'   ', 		// Only whitespace
+				'asdfasdf', // trivial
+				'password', // trivial
+				'12345678', // trivial
 			];
 
 			for (const password of validPasswords) {
