@@ -1,8 +1,3 @@
-/**
- * @module
- * Session Middleware for Hono.
- */
-
 import type { Context } from 'hono';
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
 import type { MiddlewareHandler } from 'hono/types';
@@ -44,7 +39,6 @@ export function sessionMiddleware(): MiddlewareHandler {
 			if (account) {
 				c.set('account', account);
 			} else {
-				// no account found for session, delete session from DB
 				deleteSessionToken(session.id);
 				c.set('session', null);
 			}

@@ -9,4 +9,7 @@ if (!process.env.CRON_API_TOKEN) {
 
 export const GlobalConfig = {
 	CRON_API_TOKEN: process.env.CRON_API_TOKEN,
+	TIMEOUT_SESSION: 7 * 1000 * 60 * 60 * 24, // 7 days
+	TIMEOUT_VERIFY_EMAIL: 30 * 1000 * 60 * 60 * 24, // 30 days
+	TIMEOUT_PASSWORD_RESET: 2 * 1000 * 60 * 60 // 2 hours
 }

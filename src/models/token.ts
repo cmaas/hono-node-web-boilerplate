@@ -1,3 +1,4 @@
+import { GlobalConfig } from '../config.js';
 import { db } from '../db.js';
 import { generateSecureToken } from '../util.js';
 
@@ -73,7 +74,7 @@ export function deleteRawToken(id: string, type: TokenType): void {
 
 // ----- Session Tokens -----
 export function createSessionToken(accountId: string, payload: { userAgent: string }): SessionToken {
-	const expires = Date.now() + 1000 * 60 * 60 * 24 * 7; // 7 days
+	const expires = Date.now() + GlobalConfig.TIMEOUT_SESSION;
 	return createRawToken<SessionPayload>(accountId, expires, 'session', payload);
 }
 export function getSessionToken(id: string): SessionToken | null {
@@ -85,7 +86,7 @@ export function deleteSessionToken(id: string): void {
 
 // ----- Verify Email Tokens -----
 export function createVerifyEmailToken(accountId: string, email: string): VerifyEmailToken {
-	const expires = Date.now() + 1000 * 60 * 60 * 24 * 30; // 30 days
+	const expires = Date.now() + GlobalConfig.TIMEOUT_VERIFY_EMAIL;
 	return createRawToken<VerifyEmailPayload>(accountId, expires, 'verifyEmail', { email });
 }
 export function getVerifyEmailToken(id: string): VerifyEmailToken | null {
@@ -97,7 +98,7 @@ export function deleteVerifyEmailToken(id: string): void {
 
 // ----- Password Reset Tokens -----
 export function createPasswordResetToken(accountId: string, payload: { userAgent: string }): PasswordResetToken {
-	const expires = Date.now() + 1000 * 60 * 60 * 2; // 2 hours
+	const expires = Date.now() + GlobalConfig.TIMEOUT_PASSWORD_RESET;
 	return createRawToken<PasswordResetPayload>(accountId, expires, 'passwordReset', payload);
 }
 export function getPasswordResetToken(id: string): PasswordResetToken | null {
