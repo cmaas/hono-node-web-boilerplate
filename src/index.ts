@@ -17,6 +17,7 @@ import { html } from 'hono/html';
 import { logger } from 'hono/logger';
 import accountApp from './account.js';
 import adminApp from './admin.js';
+import cronApp from './cron.js';
 import { EMAIL_VERIFY, sendEmail } from './email.js';
 import { type Account, createAccount, getAccount, getAccountByEmail, terminateAllSessionsForAccount, updateAccount, updateAccountPassword } from './models/account.js';
 import { createPasswordResetToken, createSessionToken, createVerifyEmailToken, deletePasswordResetToken, getPasswordResetToken, getVerifyEmailToken, type SessionToken } from './models/token.js';
@@ -57,8 +58,9 @@ eventBus.on(EVENTS.ACCOUNT_CHANGED_EMAIL, logEvent(EVENTS.ACCOUNT_CHANGED_EMAIL)
 // --- ROUTES ---
 app.route('/account', accountApp);
 app.route('/admin', adminApp);
+app.route('/cron', cronApp);
 
-app.get('/', c => {
+app.get('/', (c) => {
 	const account = <Account>c.get('account');
 	const meta = { title: 'Home', description: 'Welcome to the home page' };
 	if (account) {
@@ -75,7 +77,7 @@ app.get('/', c => {
 });
 
 // --- LOGIN FLOW ---
-app.get('/login', c => {
+app.get('/login', (c) => {
 	// do not allow login if already logged in
 	if (c.get('account')) {
 		return c.redirect('/account');
@@ -84,7 +86,7 @@ app.get('/login', c => {
 	return c.html(LoginForm({ values: {}, errors: [] }));
 });
 
-app.post('/login', async c => {
+app.post('/login', async (c) => {
 	// do not allow login if already logged in
 	if (c.get('account')) {
 		return c.redirect('/account');
@@ -117,7 +119,7 @@ app.post('/login', async c => {
 });
 
 // --- SIGNUP FLOW ---
-app.get('/signup', c => {
+app.get('/signup', (c) => {
 	// do not allow signup if already logged in
 	if (c.get('account')) {
 		return c.redirect('/account');
@@ -125,7 +127,7 @@ app.get('/signup', c => {
 	return c.html(SignupForm({ values: {}, errors: [] }));
 });
 
-app.post('/signup', async c => {
+app.post('/signup', async (c) => {
 	// do not allow signup if already logged in
 	if (c.get('account')) {
 		return c.redirect('/account');
@@ -165,7 +167,7 @@ app.post('/signup', async c => {
  * Password reset step 1: User requests a password reset link by providing their email address.
  * - User can be logged in or not. Maybe the user forgot their password, but wants to log in to another device.
  */
-app.get('/reset-password', c => {
+app.get('/reset-password', (c) => {
 	const account = <Account>c.get('account');
 	let email = '';
 	if (account) {
@@ -178,7 +180,7 @@ app.get('/reset-password', c => {
  * Password reset step 2: Create reset token, send an email with a reset link.
  * - Rate limit in web server config!
  */
-app.post('/reset-password', async c => {
+app.post('/reset-password', async (c) => {
 	const body = await c.req.parseBody();
 	const values = { email: (<string>body.email || '').trim() };
 
@@ -200,7 +202,7 @@ app.post('/reset-password', async c => {
 /**
  * Password reset step 3: User clicks link in email (GET request) and is taken to a form to enter a new password.
  */
-app.get('/set-password', c => {
+app.get('/set-password', (c) => {
 	const id = c.req.query('token');
 	if (!id || !isValidToken(id)) {
 		return c.html(ErrorView({ message: 'Invalid password reset token' }));
@@ -217,7 +219,7 @@ app.get('/set-password', c => {
  * Password reset step 4: Validate token, set new password, invalidate token, invalidate all sessions of this user.
  * - Rate limit in web server config!
  */
-app.post('/set-password', async c => {
+app.post('/set-password', async (c) => {
 	const body = await c.req.parseBody();
 	const values = { id: <string>body.token || '', password: (<string>body.password || '').trim() };
 	if (!isValidToken(values.id)) {
@@ -267,7 +269,7 @@ app.post('/set-password', async c => {
  * - This route shows a form that auto-submits (via minimal client-side JS) to turn the request into a POST for security reasons.
  * - We do not validate the token here, just check if it looks valid.
  */
-app.get('/verify-email', c => {
+app.get('/verify-email', (c) => {
 	const id = c.req.query('token');
 	if (!isValidToken(id)) {
 		return c.html(ErrorView({ message: 'Invalid email verification token' }));
@@ -283,7 +285,7 @@ app.get('/verify-email', c => {
  * - Verifying an email address does NOT log in the user automatically, because the verification link has a way longer expiration time.
  * - Rate limit in web server config!
  */
-app.post('/verify-email', async c => {
+app.post('/verify-email', async (c) => {
 	const body = await c.req.parseBody();
 	const id = <string>body.token;
 	if (!isValidToken(id)) {

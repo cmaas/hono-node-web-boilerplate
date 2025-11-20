@@ -16,12 +16,17 @@ This is a small boilerplate / starter project for Hono with the focus on:
 - No magic middleware, just plain controllers to keep [cognitive load](https://github.com/zakirullin/cognitive-load) simple. Optionally a middleware that does the basic "has account" check
 
 
-## How to use
+## How to use & Setup
 
 Consider this project as a starting point or learning resource and customize to your needs. Clone the project, then init a new SQLite DB:
 
 ```bash
 sqlite3 mydata.db < spec/data.sql
+```
+
+Init a new .env file:
+```bash
+echo "CRON_API_TOKEN=\"$(openssl rand -hex 32)\"" > .env
 ```
 
 Then start the Hono Node server via:
@@ -42,7 +47,6 @@ Open [localhost:3000](http://localhost:3000/) in your browser and sign up a new 
 
 - Full admin functionality to edit users, resend verification tokens etc.
 - Configurable timeouts
-- cron jobs to delete expired tokens
 - integrating an SMTP service to actually send emails
 
 ## Changelog
