@@ -45,15 +45,22 @@ export const EVENTS = {
 	ACCOUNT_CREATED: 'account:created',
 	ACCOUNT_VERIFIED_EMAIL: 'account:verified_email',
 	ACCOUNT_CHANGED_EMAIL: 'account:changed_email',
+	ACCOUNT_PASSWORD_RESET_INIT: 'account:password_reset_init',
+	ACCOUNT_PASSWORD_UPDATED: 'account:updated_password',
+	ACCOUNT_PASSWORD_UPDATE_FAILED: 'account:failed_password_update',
+	ACCOUNT_UPDATED: 'account:updated',
+	ACCOUNT_UPDATE_FAILED: 'account:update_failed',
+	LOGIN_INVALID_PASSWORD: 'login:invalid_password',
 };
 
 export const eventBus = new EventEmitter();
 const logEvent = (name: string) => (payload: unknown) => console.log(`[eventBus] ${name}`, payload);
 
 // simple event listeners; in your app, you might want to send emails, notify external systems etc.
-eventBus.on(EVENTS.ACCOUNT_CREATED, logEvent(EVENTS.ACCOUNT_CREATED));
-eventBus.on(EVENTS.ACCOUNT_VERIFIED_EMAIL, logEvent(EVENTS.ACCOUNT_VERIFIED_EMAIL));
-eventBus.on(EVENTS.ACCOUNT_CHANGED_EMAIL, logEvent(EVENTS.ACCOUNT_CHANGED_EMAIL));
+for (const eventName of Object.values(EVENTS)) {
+	eventBus.on(eventName, logEvent(eventName));
+}
+
 
 // --- ROUTES ---
 app.route('/account', accountApp);
@@ -109,6 +116,7 @@ app.post('/login', async (c) => {
 	}
 
 	if (!(await isSamePassword(account.password, body.password as string))) {
+		eventBus.emit(EVENTS.LOGIN_INVALID_PASSWORD, { account });
 		return c.html(LoginForm({ values, errors: [{ field: 'password', message: 'Wrong password' }] }));
 	}
 
@@ -196,6 +204,8 @@ app.post('/reset-password', async (c) => {
 	const token = createPasswordResetToken(account.id, { userAgent: c.req.header('User-Agent') || '' });
 	sendEmail(account.email, 'Password reset', `Click the link to reset your password: http://localhost:3000/set-password?token=${token.id}`);
 
+	eventBus.emit(EVENTS.ACCOUNT_PASSWORD_RESET_INIT, { account, token });
+
 	return c.html(PasswordResetRequestSucess());
 });
 
@@ -207,6 +217,7 @@ app.get('/set-password', (c) => {
 	if (!id || !isValidToken(id)) {
 		return c.html(ErrorView({ message: 'Invalid password reset token' }));
 	}
+
 	const token = getPasswordResetToken(id);
 	if (!token || token.expires < Date.now()) {
 		return c.html(ErrorView({ message: 'Password reset token expired or not found' }));
@@ -225,6 +236,7 @@ app.post('/set-password', async (c) => {
 	if (!isValidToken(values.id)) {
 		return c.html(ErrorView({ message: 'Invalid password reset token' }));
 	}
+
 	const token = getPasswordResetToken(values.id);
 	if (!token || token.expires < Date.now()) {
 		return c.html(ErrorView({ message: 'Invalid password reset token' }));
@@ -239,9 +251,13 @@ app.post('/set-password', async (c) => {
 	}
 	const result = await updateAccountPassword(account.id, values.password);
 	if (!result) {
-		// todo: notify admin, because this means we didn't write to db
+		// todo: this should trigger some kind of notification to admins, because then we couldn't write to the db
+		eventBus.emit(EVENTS.ACCOUNT_PASSWORD_UPDATE_FAILED, { account, token });
 		return c.html(ErrorView({ message: 'Failed to update password. Please send a message to our customer support.' }));
+	} else {
+		eventBus.emit(EVENTS.ACCOUNT_PASSWORD_UPDATED, { account });
 	}
+
 	deletePasswordResetToken(values.id);
 	clearSessionCookie(c);
 	terminateAllSessionsForAccount(account.id);
@@ -255,8 +271,12 @@ app.post('/set-password', async (c) => {
 	// a link in their email, so they must own the email address
 	if (account.emailVerified <= 0) {
 		account.emailVerified = Date.now();
-		updateAccount(account);
-		eventBus.emit(EVENTS.ACCOUNT_VERIFIED_EMAIL, { account });
+		const result = updateAccount(account);
+		if (!result) {
+			eventBus.emit(EVENTS.ACCOUNT_UPDATE_FAILED, { account, error: 'Failed to set verified status after password change' });
+		} else {
+			eventBus.emit(EVENTS.ACCOUNT_VERIFIED_EMAIL, { account });
+		}
 	}
 
 	return c.html(SuccessView({ message: 'Your password has been changed' }));
@@ -291,19 +311,27 @@ app.post('/verify-email', async (c) => {
 	if (!isValidToken(id)) {
 		return c.html(ErrorView({ message: 'Invalid email verification token' }));
 	}
+
 	const token = getVerifyEmailToken(id);
 	if (!token || token.expires < Date.now()) {
 		return c.html(ErrorView({ message: 'Email verification token expired or not found. Please request a new verification email.' }));
 	}
+
 	const account = getAccount(token.accountId);
 	if (!account) {
 		return c.html(ErrorView({ message: 'Account not found' }));
 	}
+
 	// verify email if not already verified
 	if (account.emailVerified <= 0) {
 		account.emailVerified = Date.now();
-		updateAccount(account);
-		eventBus.emit(EVENTS.ACCOUNT_VERIFIED_EMAIL, { account });
+		const result = updateAccount(account);
+		if (!result) {
+			eventBus.emit(EVENTS.ACCOUNT_UPDATE_FAILED, { account, error: 'Failed to set verified status' });
+		}
+		else {
+			eventBus.emit(EVENTS.ACCOUNT_VERIFIED_EMAIL, { account });
+		}
 	}
 
 	return c.html(SuccessView({ message: `Email verified, thank you! You can now close this window.`, title: 'Email verified' }));
