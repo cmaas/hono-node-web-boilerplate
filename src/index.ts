@@ -20,7 +20,7 @@ import adminApp from './admin.js';
 import cronApp from './cron.js';
 import { EMAIL_VERIFY, sendEmail } from './email.js';
 import { type Account, createAccount, getAccount, getAccountByEmail, terminateAllSessionsForAccount, updateAccount, updateAccountPassword } from './models/account.js';
-import { createPasswordResetToken, createSessionToken, createVerifyEmailToken, deletePasswordResetToken, getPasswordResetToken, getVerifyEmailToken, type SessionToken } from './models/token.js';
+import { createPasswordResetToken, createSessionToken, createVerifyEmailToken, deletePasswordResetToken, getPasswordResetToken, getVerifyEmailToken, type SessionToken, updateLastSessionActivity } from './models/token.js';
 import { clearSessionCookie, initSessionCookie, sessionMiddleware } from './plugins/server-session.js';
 import { isSamePassword, isValidEmail, isValidToken, satisfiesPasswordPolicy } from './util.js';
 import { EmailVerifyForm } from './views/email-verification.js';
@@ -61,7 +61,6 @@ for (const eventName of Object.values(EVENTS)) {
 	eventBus.on(eventName, logEvent(eventName));
 }
 
-
 // --- ROUTES ---
 app.route('/account', accountApp);
 app.route('/admin', adminApp);
@@ -71,9 +70,16 @@ app.get('/', (c) => {
 	const account = <Account>c.get('account');
 	const meta = { title: 'Home', description: 'Welcome to the home page' };
 	if (account) {
+		const session = <SessionToken>c.get('session');
+		updateLastSessionActivity(session);
+		const formatDate = (v: unknown) => (v ? new Date(v as any).toLocaleString() : 'n/a');
+		const prev = formatDate(session.payload?.previousVisit);
+		const last = formatDate(session.payload?.lastActivity);
+		console.log('SESSION INFO: prevVisit / lastActivity', prev, last);
 		return c.html(
 			Main(
 				html`<h1>Welcome back ${account.email}</h1>
+					<p>Your previous visit: ${prev}</p>
 					<p><a href="/account/special">Special page</a> (requires verified email)</p>`,
 				meta,
 				{ account },
@@ -328,8 +334,7 @@ app.post('/verify-email', async (c) => {
 		const result = updateAccount(account);
 		if (!result) {
 			eventBus.emit(EVENTS.ACCOUNT_UPDATE_FAILED, { account, error: 'Failed to set verified status' });
-		}
-		else {
+		} else {
 			eventBus.emit(EVENTS.ACCOUNT_VERIFIED_EMAIL, { account });
 		}
 	}

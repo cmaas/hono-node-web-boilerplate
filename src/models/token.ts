@@ -19,6 +19,8 @@ interface TokenDTO extends Omit<Token<string>, 'payload'> {
 
 export interface SessionPayload {
 	userAgent?: string;
+	lastActivity?: number; // UNIX timestamp in milliseconds
+	previousVisit?: number; // UNIX timestamp in milliseconds
 }
 export interface VerifyEmailPayload {
 	email: string;
@@ -31,15 +33,34 @@ export type SessionToken = Token<SessionPayload>;
 export type VerifyEmailToken = Token<VerifyEmailPayload>;
 export type PasswordResetToken = Token<PasswordResetPayload>;
 
-export function createRawToken<T>(accountId: string, expires: number, type: TokenType, payload: T | null, tokenLength = 32): Token<T> {
-	let payloadStr = '';
-	if (payload !== null && payload !== undefined) {
-		try {
-			payloadStr = JSON.stringify(payload);
-		} catch (e) {
-			console.debug('(token.createRawToken) failed to stringify payload', e);
-		}
+// ----- Helper Functions -----
+function marshallPayload<T>(payload: T | null): string {
+	if (payload === null || payload === undefined) {
+		return '';
 	}
+	try {
+		return JSON.stringify(payload);
+	} catch (e) {
+		console.debug('(token.marshallPayload) failed to stringify payload', e);
+		return '';
+	}
+}
+
+function unmarshallPayload<T>(payloadStr: string): T | null {
+	if (!payloadStr) {
+		return null;
+	}
+	try {
+		return <T>JSON.parse(payloadStr);
+	} catch (e) {
+		console.debug('(token.unmarshallPayload) failed to parse payload', e);
+		return null;
+	}
+}
+
+// ----- Core Token Operations -----
+export function createRawToken<T>(accountId: string, expires: number, type: TokenType, payload: T | null, tokenLength = 32): Token<T> {
+	const payloadStr = marshallPayload(payload);
 	const token: Token<T> = {
 		id: generateSecureToken(tokenLength),
 		created: Date.now(),
@@ -58,13 +79,7 @@ export function getRawToken<T>(id: string, type: TokenType): Token<T> | null {
 	if (!row) {
 		return null;
 	}
-	let payload = null;
-	try {
-		payload = <T>JSON.parse(row.payload);
-	} catch (e) {
-		console.debug('(token.getRawToken) failed to parse payload', e);
-	}
-
+	const payload = unmarshallPayload<T>(row.payload);
 	return { id: row.id, created: row.created, expires: row.expires, accountId: row.accountId, type: row.type, payload };
 }
 
@@ -106,4 +121,32 @@ export function getPasswordResetToken(id: string): PasswordResetToken | null {
 }
 export function deletePasswordResetToken(id: string): void {
 	deleteRawToken(id, 'passwordReset');
+}
+
+// ----- Generic Token Payload Update -----
+export function updateTokenPayload<T>(id: string, type: TokenType, payload: T): boolean {
+	const payloadStr = marshallPayload(payload);
+	const result = db.prepare('UPDATE tokens SET payload = ? WHERE id = ? AND type = ?')
+		.run(payloadStr, id, type);
+	return result.changes > 0;
+}
+
+// ----- Session Activity Tracking -----
+export function updateLastSessionActivity(session: SessionToken | null): void {
+	if (!session || !session.payload) {
+		return;
+	}
+
+	const now = Date.now();
+	const lastActivity = session.payload.lastActivity || 0;
+	console.log('updateLastSessionActivity: lastActivity=', new Date(lastActivity).toISOString(), ' comp=', new Date(now - GlobalConfig.TIMEOUT_INACTIVITY_LAST_VISIT_REFRESH) );
+	// If the last activity is old (> 60 minutes), store it as previousVisit
+	if (lastActivity > 0 && lastActivity < now - GlobalConfig.TIMEOUT_INACTIVITY_LAST_VISIT_REFRESH) {
+		console.debug(`updateLastSessionActivity: updating previousVisit for session ${session.id}: ${new Date(lastActivity).toISOString()}`);
+		session.payload.previousVisit = lastActivity;
+	}
+
+	// Update lastActivity to now
+	session.payload.lastActivity = now;
+	updateTokenPayload<SessionPayload>(session.id, 'session', session.payload);
 }
