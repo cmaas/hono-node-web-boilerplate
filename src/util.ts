@@ -58,3 +58,54 @@ export function satisfiesPasswordPolicy(password: string): boolean {
 	} */
 	return true;
 }
+
+/**
+ * Generate a list of page numbers for pagination navigation.
+ * Returns an array where 0 represents ellipsis (...) for skipped pages.
+ *
+ * @param page - Current page number (1-indexed)
+ * @param pageCount - Total number of pages
+ * @returns Array of page numbers, with 0 indicating ellipsis
+ *
+ * @example
+ * generatePageNumbers(1, 10)  // [1, 2, 0, 10]
+ * generatePageNumbers(5, 10)  // [1, 0, 4, 5, 6, 0, 10]
+ * generatePageNumbers(10, 10) // [1, 0, 9, 10]
+ */
+export function generatePageNumbers(page: number, pageCount: number): number[] {
+	if (pageCount <= 1) {
+		return [1];
+	}
+
+	if (pageCount <= 5) {
+		const pages: number[] = [];
+		for (let i = 0; i < pageCount; i++) {
+			pages.push(i + 1);
+		}
+		return pages;
+	}
+
+	const pages: number[] = [];
+	// 6 or more pages
+	pages.push(1); // first
+	if (page > 3) {
+		pages.push(0);      // ... (ellipsis)
+		pages.push(page - 1); // prev
+	} else if (page > 2) {
+		pages.push(page - 1); // prev
+	}
+
+	if (page > 1 && page < pageCount) {
+		pages.push(page); // self
+	}
+
+	if (page < pageCount - 2) {
+		pages.push(page + 1); // next
+		pages.push(0);        // ... (ellipsis)
+	} else if (page < pageCount - 1) {
+		pages.push(page + 1); // next
+	}
+	pages.push(pageCount); // last
+
+	return pages;
+}

@@ -202,8 +202,64 @@
 	}
 }
 
+@layer utils {
+	.sr-only {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		margin: -1px;
+		overflow: hidden;
+		clip: rect(0, 0, 0, 0);
+		white-space: nowrap;
+		border-width: 0;
+	}
+
+	.pointer-events-none {
+		pointer-events: none;
+	}
+}
+
 @layer components {
 	.error {
 		--spacing-md: 0;
 	}
+
+	.pagination {
+		margin-left: auto;
+		margin-right: auto;
+		color: var(--color-text);
+
+		& ul {
+			padding: 0;
+			list-style: none;
+			display: flex;
+			gap: var(--spacing-xs);
+			font-size: var(--font-size-sm);
+		}
+
+		& .pagination-item {
+			color: currentColor;
+			height: 1.5rem;
+			width: 1.5rem;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			border: 1px solid var(--color-gray-300);
+
+			&.current-page {
+				font-weight: bold;
+			}
+
+			&.disabled {
+				color: var(--color-text-muted);
+			}
+		}
+
+		& svg {
+			width: 0.625rem;
+			height: 0.625rem;
+		}
+	}
+
 }

@@ -26,9 +26,21 @@ const requireAdminAccount = async (c: Context, next: Next) => {
 
 // here we are in a sub-app of Hono, actual route for this is: /admin
 app.get('/', requireAdminAccount, (c) => {
-	const q = c.req.query('q');
-	const searchResults = searchAccounts(q || '') || [];
-	return c.html(AdminView({ accounts: searchResults, query: q || '' }));
+	const q = c.req.query('q') || '';
+	const pageParam = c.req.query('page');
+	const page = pageParam ? Math.max(1, Number.parseInt(pageParam, 10)) : 1;
+
+	const resultsPerPage = 25;
+	const result = searchAccounts(q, page, resultsPerPage);
+	const totalPages = Math.ceil(result.totalCount / resultsPerPage);
+
+	return c.html(AdminView({
+		accounts: result.accounts,
+		query: q,
+		page,
+		totalPages,
+		totalCount: result.totalCount,
+	}));
 });
 
 app.get('/account-details', requireAdminAccount, (c) => {

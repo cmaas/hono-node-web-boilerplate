@@ -2,13 +2,26 @@ import { html } from 'hono/html';
 import type { HtmlEscapedString } from 'hono/utils/html';
 import type { Account } from '../models/account.js';
 import { MainReduced } from './main.js';
+import { Pagination } from './pagination.js';
 
-export function AdminView(props: { accounts: Array<Account>, query: string | null }): HtmlEscapedString | Promise<HtmlEscapedString> {
+export function AdminView(props: {
+	accounts: Array<Account>;
+	query: string | null;
+	page: number;
+	totalPages: number;
+	totalCount: number;
+}): HtmlEscapedString | Promise<HtmlEscapedString> {
+	const queryParams: Record<string, string> = {};
+	if (props.query) {
+		queryParams.q = props.query;
+	}
+
 	return MainReduced(html`
 		<h1>Admin Dashboard</h1>
 		<form action="/admin" method="get">
 			<input type="search" name="q" placeholder="Search by ID, email, role" value="${props.query || ''}">
 		</form>
+		<p>Total accounts: ${props.totalCount}</p>
 		${props.accounts.length === 0 ? html`<p>No accounts found.</p>` : html`
 			<table>
 				<thead>
@@ -30,6 +43,12 @@ export function AdminView(props: { accounts: Array<Account>, query: string | nul
 					`)}
 				</tbody>
 			</table>
+			${Pagination({
+				page: props.page,
+				pageCount: props.totalPages,
+				baseUrl: '/admin',
+				queryParams,
+			})}
 		`}
 		`,
 		{ title: 'Admin Dashboard' }
