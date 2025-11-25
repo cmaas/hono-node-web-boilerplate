@@ -131,7 +131,12 @@ export function updateTokenPayload<T>(id: string, type: TokenType, payload: T): 
 	return result.changes > 0;
 }
 
-// ----- Session Activity Tracking -----
+/**
+ * Keeps track of the last activity of the session. After a certain period of inactivity,
+ * the last activity timestamp becomes the previousVisit timestamp.
+ * @param session The session token to update
+ * @returns
+ */
 export function updateLastSessionActivity(session: SessionToken | null): void {
 	if (!session || !session.payload) {
 		return;
@@ -139,14 +144,12 @@ export function updateLastSessionActivity(session: SessionToken | null): void {
 
 	const now = Date.now();
 	const lastActivity = session.payload.lastActivity || 0;
-	console.log('updateLastSessionActivity: lastActivity=', new Date(lastActivity).toISOString(), ' comp=', new Date(now - GlobalConfig.TIMEOUT_INACTIVITY_LAST_VISIT_REFRESH) );
-	// If the last activity is old (> 60 minutes), store it as previousVisit
+
 	if (lastActivity > 0 && lastActivity < now - GlobalConfig.TIMEOUT_INACTIVITY_LAST_VISIT_REFRESH) {
 		console.debug(`updateLastSessionActivity: updating previousVisit for session ${session.id}: ${new Date(lastActivity).toISOString()}`);
 		session.payload.previousVisit = lastActivity;
 	}
 
-	// Update lastActivity to now
 	session.payload.lastActivity = now;
 	updateTokenPayload<SessionPayload>(session.id, 'session', session.payload);
 }
