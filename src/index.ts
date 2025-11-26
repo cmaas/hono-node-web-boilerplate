@@ -72,8 +72,6 @@ app.get('/', (c) => {
 	if (account) {
 		const session = <SessionToken>c.get('session');
 		updateLastSessionActivity(session);
-		const formatDate = (v: unknown) => (v ? new Date(v as any).toLocaleString() : 'n/a');
-		const prev = formatDate(session.payload?.previousVisit);
 		return c.html(
 			Main(
 				html`<h1>Welcome back ${account.email}</h1>
