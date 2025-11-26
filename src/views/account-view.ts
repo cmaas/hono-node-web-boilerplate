@@ -17,9 +17,16 @@ export function AccountView(props: { account: Account, session: SessionToken, ac
 				<button style="width:auto;" type="submit">Request email verification</button>
 			</form>
 		`}
-		<form action="/account/logout" method="post">
-			<button style="width:auto;" type="submit">Logout</button>
-		</form>
+		<div style="display: flex; gap: 0.5rem;">
+			<form action="/account/logout" method="post">
+				<button style="width:auto;" type="submit">Logout</button>
+			</form>
+			${props.activeSessions.length > 1 && html`
+			<form action="/account/logout/all" method="post">
+				<button style="width:auto;" type="submit">Logout all devices</button>
+			</form>
+		</div>
+		`}
 
 		<hr>
 		<h2>Active Sessions</h2>
@@ -32,11 +39,27 @@ export function AccountView(props: { account: Account, session: SessionToken, ac
 					${session.payload?.previousVisit ? `Previous visit: ${new Date(session.payload?.previousVisit).toLocaleString()}<br>` : ''}
 					Device: ${session.payload?.userAgent} <br>
 					Expires: ${new Date(session.expires).toLocaleString()} <br>
+					${session.id === props.session.id
+			? html`<strong>(Current Session)</strong>`
+			: html`
+							<form action="/account/revoke-session/${session.id}" method="post" style="display:inline;" onsubmit="return confirmRevoke(event)">
+								<button type="submit" style="width:auto;background-color:#d32f2f;">Revoke Session</button>
+							</form>
+						`
+		}
 				</li>
 			`)}
 		</ul>
 
 		<script>
+			function confirmRevoke(event) {
+				if (!confirm('Are you sure you want to revoke this session? The device will be logged out immediately.')) {
+					event.preventDefault();
+					return false;
+				}
+				return true;
+			}
+
 			function showModal(id) {
 				const dialog = document.getElementById(id);
 				if (dialog) {

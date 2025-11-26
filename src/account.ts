@@ -50,6 +50,33 @@ app.post('/logout', requireAccount, async (c) => {
 	return c.redirect('/');
 });
 
+app.post('/logout/all', requireAccount, async (c) => {
+	const session = <SessionToken>c.get('session');
+	terminateAllSessionsForAccount(session.accountId);
+	clearSessionCookie(c);
+	return c.redirect('/');
+});
+
+// --- REVOKE SESSION ---
+app.post('/revoke-session/:sessionId', requireAccount, async (c) => {
+	const account = <Account>c.get('account');
+	const currentSession = <SessionToken>c.get('session');
+	const sessionIdToRevoke = c.req.param('sessionId');
+
+	// Verify that the session belongs to the current account
+	const sessionsForAccount = getSessionTokensForAccount(account.id);
+	const sessionExists = sessionsForAccount.some(s => s.id === sessionIdToRevoke);
+	if (!sessionExists) {
+		return c.html(ErrorView({ message: 'Session not found or does not belong to your account.' }), 404);
+	}
+
+	if (sessionIdToRevoke === currentSession.id) {
+		clearSessionCookie(c);
+	}
+	deleteSessionToken(sessionIdToRevoke);
+	return c.redirect('/account');
+});
+
 /**
  * Email verification step 1: If the user didn't receive a "verify your email" yet, they can request another email while logged in.
  * - Rate limit in web server config!
