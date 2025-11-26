@@ -95,6 +95,19 @@ export function createSessionToken(accountId: string, payload: { userAgent: stri
 export function getSessionToken(id: string): SessionToken | null {
 	return getRawToken<SessionPayload>(id, 'session');
 }
+export function getSessionTokensForAccount(accountId: string): Array<SessionToken> {
+	const rows = <Array<SessionToken>>db.prepare('SELECT * FROM tokens WHERE accountId = ? AND type = ?')
+		.all(accountId, 'session');
+	if (!rows || rows.length === 0) {
+		return [];
+	}
+	const tokens = rows.map(row => {
+		const payload = unmarshallPayload<SessionPayload>(row.payload as any);
+		row.payload = payload;
+		return row;
+	});
+	return tokens;
+}
 export function deleteSessionToken(id: string): void {
 	deleteRawToken(id, 'session');
 }

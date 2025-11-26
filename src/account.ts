@@ -3,7 +3,7 @@ import { type Context, Hono, type Next } from 'hono';
 import { EMAIL_VERIFY, sendEmail } from './email.js';
 import { EVENTS, eventBus } from './index.js';
 import { type Account, getAccountByEmail, terminateAllSessionsForAccount, updateAccount, updateAccountPassword } from './models/account.js';
-import { createSessionToken, createVerifyEmailToken, deleteSessionToken, type SessionPayload, type SessionToken } from './models/token.js';
+import { createSessionToken, createVerifyEmailToken, deleteSessionToken, getSessionTokensForAccount, type SessionPayload, type SessionToken } from './models/token.js';
 import { clearSessionCookie, initSessionCookie } from './plugins/server-session.js';
 import { isSamePassword, isValidEmail, satisfiesPasswordPolicy } from './util.js';
 import { AccountView, ChangeEmailForm, ChangePasswordForm } from './views/account-view.js';
@@ -14,7 +14,7 @@ type Bindings = HttpBindings & {
 	/* ... */
 };
 
-const app = new Hono<{ Bindings: Bindings; Variables: { session: SessionPayload, account: Account }}>();
+const app = new Hono<{ Bindings: Bindings; Variables: { session: SessionPayload, account: Account } }>();
 
 // Middleware to require a logged-in account
 export const requireAccount = async (c: Context, next: Next) => {
@@ -29,7 +29,8 @@ export const requireAccount = async (c: Context, next: Next) => {
 app.get('/', requireAccount, (c) => {
 	const account = <Account>c.get('account');
 	const session = <SessionToken>c.get('session');
-	return c.html(AccountView({ account, session }));
+	const activeSessions = getSessionTokensForAccount(account.id);
+	return c.html(AccountView({ account, session, activeSessions }));
 });
 
 // example of a route that requires a verified email
@@ -96,7 +97,7 @@ app.post('/change-password', requireAccount, async (c) => {
 });
 
 app.get('/change-email', requireAccount, (c) => {
-	return c.html(ChangeEmailForm({ values: { }, errors: [] }));
+	return c.html(ChangeEmailForm({ values: {}, errors: [] }));
 });
 
 app.post('/change-email', requireAccount, async (c) => {

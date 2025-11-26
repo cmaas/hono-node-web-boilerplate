@@ -74,12 +74,9 @@ app.get('/', (c) => {
 		updateLastSessionActivity(session);
 		const formatDate = (v: unknown) => (v ? new Date(v as any).toLocaleString() : 'n/a');
 		const prev = formatDate(session.payload?.previousVisit);
-		const last = formatDate(session.payload?.lastActivity);
-		console.log('SESSION INFO: prevVisit / lastActivity', prev, last);
 		return c.html(
 			Main(
 				html`<h1>Welcome back ${account.email}</h1>
-					<p>Your previous visit: ${prev}</p>
 					<p><a href="/account/special">Special page</a> (requires verified email)</p>`,
 				meta,
 				{ account },

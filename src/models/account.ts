@@ -14,7 +14,7 @@ export interface Account {
 }
 
 export function getAccountByEmail(email: string): Account | null {
-	const row = <Account> db.prepare('SELECT * FROM accounts WHERE email = ?').get(email);
+	const row = <Account>db.prepare('SELECT * FROM accounts WHERE email = ?').get(email);
 	if (!row) {
 		return null;
 	}
@@ -30,8 +30,8 @@ export function getAccountByEmail(email: string): Account | null {
 }
 
 export function getAccount(id: string): Account | null {
-	const row = <Account> db.prepare('SELECT * FROM accounts WHERE id = ?').get(id);
-	if (! row) {
+	const row = <Account>db.prepare('SELECT * FROM accounts WHERE id = ?').get(id);
+	if (!row) {
 		return null;
 	}
 	return {

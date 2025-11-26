@@ -46,10 +46,12 @@ Open [localhost:3000](http://localhost:3000/) in your browser and sign up a new 
 ## Next steps (not implemented)
 
 - Full admin functionality to edit users, resend verification tokens etc.
-- Configurable timeouts
 - integrating an SMTP service to actually send emails
 
 ## Changelog
 
+### 1.2.0 (2025-11-25)
+- Added: pagination utils, session last visit tracking, better logging, more events in user flow
+
 ### 1.1.0 (2025-10-12)
-* Removed Pico CSS for a very lightweight custom stylesheet
+- Removed Pico CSS for a very lightweight custom stylesheet

@@ -1,6 +1,6 @@
 {
 	"name": "hono-node-web-boilerplate",
-	"version": "1.1.0",
+	"version": "1.2.0",
 	"description": "A small boilerplate / starter project for Hono on Node.js with SQLite, server-side template rendering using Hono's html and basic account functionality.",
 	"keywords": [
 		"hono",

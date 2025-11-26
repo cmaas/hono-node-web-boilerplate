@@ -5,7 +5,7 @@ import type { SessionToken } from '../models/token.js';
 import type { FormValues } from '../types.js';
 import { Main, MainReduced } from './main.js';
 
-export function AccountView(props: { account: Account, session: SessionToken }): HtmlEscapedString | Promise<HtmlEscapedString> {
+export function AccountView(props: { account: Account, session: SessionToken, activeSessions: Array<SessionToken> }): HtmlEscapedString | Promise<HtmlEscapedString> {
 	return Main(html`
 		<h1>Your Account</h1>
 		<p>Email:
@@ -20,6 +20,21 @@ export function AccountView(props: { account: Account, session: SessionToken }):
 		<form action="/account/logout" method="post">
 			<button style="width:auto;" type="submit">Logout</button>
 		</form>
+
+		<hr>
+		<h2>Active Sessions</h2>
+		<ul>
+			${props.activeSessions.map(session => html`
+				<li>
+					Session ID: ${session.id} <br>
+					First seen: ${new Date(session.created).toLocaleString()}<br>
+					Last seen: ${new Date(session.payload?.lastActivity || 0).toLocaleString()}<br>
+					${session.payload?.previousVisit ? `Previous visit: ${new Date(session.payload?.previousVisit).toLocaleString()}<br>` : ''}
+					Device: ${session.payload?.userAgent} <br>
+					Expires: ${new Date(session.expires).toLocaleString()} <br>
+				</li>
+			`)}
+		</ul>
 
 		<script>
 			function showModal(id) {
