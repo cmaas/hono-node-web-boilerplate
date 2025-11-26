@@ -17,8 +17,8 @@ describe('Signup Integration Tests', () => {
 			},
 			body: new URLSearchParams({
 				email: email,
-				password: ''
-			})
+				password: '',
+			}),
 		});
 
 		// Verify account was created in the app's database (which is now our test db)
@@ -38,8 +38,8 @@ describe('Signup Integration Tests', () => {
 			},
 			body: new URLSearchParams({
 				email: email,
-				password: password
-			})
+				password: password,
+			}),
 		});
 
 		// Verify account was created in database
@@ -56,8 +56,8 @@ describe('Signup Integration Tests', () => {
 			},
 			body: new URLSearchParams({
 				email: 'invalid-email',
-				password: ''
-			})
+				password: '',
+			}),
 		});
 
 		assert.strictEqual(res.status, 200, 'Should return form with error');
@@ -79,8 +79,8 @@ describe('Signup Integration Tests', () => {
 			},
 			body: new URLSearchParams({
 				email: email,
-				password: ''
-			})
+				password: '',
+			}),
 		});
 
 		assert.strictEqual(res.status, 200, 'Should return form with error');
@@ -98,8 +98,8 @@ describe('Signup Integration Tests', () => {
 			},
 			body: new URLSearchParams({
 				email: email,
-				password: 'short' // Less than 8 characters
-			})
+				password: 'short', // Less than 8 characters
+			}),
 		});
 
 		assert.strictEqual(res.status, 200, 'Should return form with error');

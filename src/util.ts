@@ -21,7 +21,7 @@ export function generateSecureToken(length = 16) {
 	}
 	const array = new Uint8Array(length);
 	crypto.getRandomValues(array);
-	return Array.from(array, byte => SECURE_TOKEN_ALPHABET[byte % SECURE_TOKEN_ALPHABET.length]).join('');
+	return Array.from(array, (byte) => SECURE_TOKEN_ALPHABET[byte % SECURE_TOKEN_ALPHABET.length]).join('');
 }
 
 export function isValidToken(token: string | null | undefined): boolean {
@@ -89,7 +89,7 @@ export function generatePageNumbers(page: number, pageCount: number): number[] {
 	// 6 or more pages
 	pages.push(1); // first
 	if (page > 3) {
-		pages.push(0);      // ... (ellipsis)
+		pages.push(0); // ... (ellipsis)
 		pages.push(page - 1); // prev
 	} else if (page > 2) {
 		pages.push(page - 1); // prev
@@ -101,7 +101,7 @@ export function generatePageNumbers(page: number, pageCount: number): number[] {
 
 	if (page < pageCount - 2) {
 		pages.push(page + 1); // next
-		pages.push(0);        // ... (ellipsis)
+		pages.push(0); // ... (ellipsis)
 	} else if (page < pageCount - 1) {
 		pages.push(page + 1); // next
 	}

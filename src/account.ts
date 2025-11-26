@@ -14,7 +14,7 @@ type Bindings = HttpBindings & {
 	/* ... */
 };
 
-const app = new Hono<{ Bindings: Bindings; Variables: { session: SessionPayload, account: Account } }>();
+const app = new Hono<{ Bindings: Bindings; Variables: { session: SessionPayload; account: Account } }>();
 
 // Middleware to require a logged-in account
 export const requireAccount = async (c: Context, next: Next) => {
@@ -65,7 +65,7 @@ app.post('/revoke-session/:sessionId', requireAccount, async (c) => {
 
 	// Verify that the session belongs to the current account
 	const sessionsForAccount = getSessionTokensForAccount(account.id);
-	const sessionExists = sessionsForAccount.some(s => s.id === sessionIdToRevoke);
+	const sessionExists = sessionsForAccount.some((s) => s.id === sessionIdToRevoke);
 	if (!sessionExists) {
 		return c.html(ErrorView({ message: 'Session not found or does not belong to your account.' }), 404);
 	}
@@ -88,8 +88,6 @@ app.post('/request-verification', requireAccount, async (c) => {
 
 	return c.html(SuccessView({ message: `We've send you an email to verify your email address.` }));
 });
-
-
 
 app.get('/change-password', requireAccount, (c) => {
 	return c.html(ChangePasswordForm({ values: {}, errors: [] }));

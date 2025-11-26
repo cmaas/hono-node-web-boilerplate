@@ -40,7 +40,7 @@ function initializeSchema() {
 	const schemaPath = resolve(__dirname, '../sql/000_setup.sql');
 	const schemaSql = readFileSync(schemaPath, 'utf8');
 	db.exec(schemaSql);
-};
+}
 
 // Initialize schema for the default database
 initializeSchema();

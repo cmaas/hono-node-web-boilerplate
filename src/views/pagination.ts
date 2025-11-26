@@ -44,14 +44,15 @@ export function Pagination(props: PaginationProps): HtmlEscapedString | Promise<
 		<nav aria-label="Page navigation" class="pagination">
 			<ul>
 				<li>
-					${prevDisabled
-						? html`<a href="${buildUrl(1)}" class="pagination-item disabled pointer-events-none">
+					${
+						prevDisabled
+							? html`<a href="${buildUrl(1)}" class="pagination-item disabled pointer-events-none">
 								<span class="sr-only">Previous Page</span>
 								<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
 									<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 1 1 5l4 4"/>
 								</svg>
 							</a>`
-						: html`<a href="${buildUrl(page - 1)}" class="pagination-item">
+							: html`<a href="${buildUrl(page - 1)}" class="pagination-item">
 								<span class="sr-only">Previous Page</span>
 								<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
 									<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 1 1 5l4 4"/>
@@ -69,14 +70,15 @@ export function Pagination(props: PaginationProps): HtmlEscapedString | Promise<
 					return html`<li><a class="pagination-item" href="${buildUrl(pageNum)}">${pageNum}</a></li>`;
 				})}
 				<li>
-					${nextDisabled
-						? html`<a href="${buildUrl(pageCount)}" class="pagination-item disabled pointer-events-none">
+					${
+						nextDisabled
+							? html`<a href="${buildUrl(pageCount)}" class="pagination-item disabled pointer-events-none">
 								<span class="sr-only">Next Page</span>
 								<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
 									<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 9 4-4-4-4"/>
 								</svg>
 							</a>`
-						: html`<a href="${buildUrl(page + 1)}" class="pagination-item">
+							: html`<a href="${buildUrl(page + 1)}" class="pagination-item">
 								<span class="sr-only">Next Page</span>
 								<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
 									<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 9 4-4-4-4"/>

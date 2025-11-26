@@ -34,13 +34,15 @@ app.get('/', requireAdminAccount, (c) => {
 	const result = searchAccounts(q, page, resultsPerPage);
 	const totalPages = Math.ceil(result.totalCount / resultsPerPage);
 
-	return c.html(AdminView({
-		accounts: result.accounts,
-		query: q,
-		page,
-		totalPages,
-		totalCount: result.totalCount,
-	}));
+	return c.html(
+		AdminView({
+			accounts: result.accounts,
+			query: q,
+			page,
+			totalPages,
+			totalCount: result.totalCount,
+		}),
+	);
 });
 
 app.get('/account-details', requireAdminAccount, (c) => {

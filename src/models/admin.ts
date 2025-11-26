@@ -14,7 +14,7 @@ export function getRecentAccounts(page = 1, perPage = 50): PaginatedAccounts {
 	const totalCount = countResult?.count || 0;
 
 	// Get paginated results
-	const rows = <Array<Account>> db.prepare('SELECT * FROM accounts ORDER BY created DESC LIMIT ?, ?').all(offset, perPage);
+	const rows = <Array<Account>>db.prepare('SELECT * FROM accounts ORDER BY created DESC LIMIT ?, ?').all(offset, perPage);
 
 	return {
 		accounts: rows || [],
@@ -39,7 +39,7 @@ export function searchAccounts(query: string, page = 1, perPage = 50): Paginated
 
 	// Get paginated search results
 	const sql = `SELECT * FROM accounts WHERE email LIKE ? OR id LIKE ? OR role LIKE ? ORDER BY created DESC LIMIT ?, ?`;
-	const rows = <Array<Account>> db.prepare(sql).all(searchPattern, searchPattern, searchPattern, offset, perPage);
+	const rows = <Array<Account>>db.prepare(sql).all(searchPattern, searchPattern, searchPattern, offset, perPage);
 
 	return {
 		accounts: rows || [],

@@ -67,10 +67,9 @@ export function createRawToken<T>(accountId: string, expires: number, type: Toke
 		expires: expires,
 		accountId,
 		type,
-		payload
+		payload,
 	};
-	db.prepare('INSERT INTO tokens (id, created, expires, accountId, type, payload) VALUES (?, ?, ?, ?, ?, ?)')
-		.run(token.id, token.created, token.expires, token.accountId, token.type, payloadStr);
+	db.prepare('INSERT INTO tokens (id, created, expires, accountId, type, payload) VALUES (?, ?, ?, ?, ?, ?)').run(token.id, token.created, token.expires, token.accountId, token.type, payloadStr);
 	return token;
 }
 
@@ -96,12 +95,11 @@ export function getSessionToken(id: string): SessionToken | null {
 	return getRawToken<SessionPayload>(id, 'session');
 }
 export function getSessionTokensForAccount(accountId: string): Array<SessionToken> {
-	const rows = <Array<SessionToken>>db.prepare('SELECT * FROM tokens WHERE accountId = ? AND type = ?')
-		.all(accountId, 'session');
+	const rows = <Array<SessionToken>>db.prepare('SELECT * FROM tokens WHERE accountId = ? AND type = ?').all(accountId, 'session');
 	if (!rows || rows.length === 0) {
 		return [];
 	}
-	const tokens = rows.map(row => {
+	const tokens = rows.map((row) => {
 		const payload = unmarshallPayload<SessionPayload>(row.payload as any);
 		row.payload = payload;
 		return row;
@@ -139,8 +137,7 @@ export function deletePasswordResetToken(id: string): void {
 // ----- Generic Token Payload Update -----
 export function updateTokenPayload<T>(id: string, type: TokenType, payload: T): boolean {
 	const payloadStr = marshallPayload(payload);
-	const result = db.prepare('UPDATE tokens SET payload = ? WHERE id = ? AND type = ?')
-		.run(payloadStr, id, type);
+	const result = db.prepare('UPDATE tokens SET payload = ? WHERE id = ? AND type = ?').run(payloadStr, id, type);
 	return result.changes > 0;
 }
 

@@ -36,7 +36,7 @@
 	--color-border-light: var(--color-gray-100);
 
 	/* Typography */
-	--font-family: Verdana, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+	--font-family: Verdana, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 	--font-size-base: 0.875rem;
 	/* 14px */
 	--font-size-sm: 0.75rem;
@@ -75,9 +75,7 @@
 	--transition: all 0.2s ease-in-out;
 }
 
-
 @layer reset {
-
 	/*
 	Josh's Custom CSS Reset
 	https://www.joshwcomeau.com/css/custom-css-reset/
@@ -91,7 +89,6 @@
 	* {
 		margin: 0;
 	}
-
 
 	/* Prevent font size inflation, see https://piccalil.li/blog/a-more-modern-css-reset/ */
 	html {
@@ -147,8 +144,8 @@
 		text-wrap: balance;
 	}
 
-	ul[role='list'],
-	ol[role='list'] {
+	ul[role="list"],
+	ol[role="list"] {
 		list-style: none;
 	}
 
@@ -180,7 +177,6 @@
 }
 
 @layer tools {
-
 	/* https://every-layout.dev/layouts/stack/ */
 	/* https://ishadeed.com/article/self-gap/ */
 	.stack {
@@ -188,7 +184,7 @@
 		flex-direction: column;
 		justify-content: flex-start;
 
-		&>*+* {
+		& > * + * {
 			margin-block-start: var(--spacing-md);
 		}
 	}
@@ -207,7 +203,6 @@
 		max-width: 1280px;
 		padding: var(--spacing-md);
 	}
-
 }
 
 /* --- BASE: Push footer down --- */
@@ -227,7 +222,6 @@
 	main {
 		flex: 1;
 	}
-
 }
 
 @layer cosmetics {
@@ -300,5 +294,4 @@
 			height: 0.625rem;
 		}
 	}
-
 }

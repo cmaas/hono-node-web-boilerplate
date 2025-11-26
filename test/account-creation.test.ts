@@ -84,17 +84,10 @@ describe('Account Creation Tests', () => {
 				'user.name@domain.co.uk',
 				'test+tag@example.org',
 				'123@numbers.com',
-				'test..test@example.com' // Simple regex allows this
+				'test..test@example.com', // Simple regex allows this
 			];
 
-			const invalidEmails = [
-				'',
-				'invalid',
-				'@example.com',
-				'test@',
-				'test@example',
-				'test @example.com'
-			];
+			const invalidEmails = ['', 'invalid', '@example.com', 'test@', 'test@example', 'test @example.com'];
 
 			for (const email of validEmails) {
 				assert.ok(isValidEmail(email), `Should validate email: ${email}`);
@@ -106,17 +99,13 @@ describe('Account Creation Tests', () => {
 		});
 
 		test('satisfiesPasswordPolicy should validate passwords correctly', () => {
-			const validPasswords = [
-				'password123',
-				'123456789',
-				'a'.repeat(8)
-			];
+			const validPasswords = ['password123', '123456789', 'a'.repeat(8)];
 
 			const invalidPasswords = [
 				'',
 				'short',
-				'1234567', 	// 7 characters
-				'   ', 		// Only whitespace
+				'1234567', // 7 characters
+				'   ', // Only whitespace
 				'asdfasdf', // trivial
 				'password', // trivial
 				'12345678', // trivial
@@ -136,19 +125,14 @@ describe('Account Creation Tests', () => {
 		});
 
 		test('isValidToken should validate tokens correctly', () => {
-			const validTokens = [
-				'Abc123_-Z',
-				'A',
-				'0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz-',
-				'a'.repeat(256)
-			];
+			const validTokens = ['Abc123_-Z', 'A', '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz-', 'a'.repeat(256)];
 
 			const invalidTokens = [
 				'',
 				'invalid!',
 				'token with spaces',
 				'token@with#special$chars',
-				'a'.repeat(257) // Too long
+				'a'.repeat(257), // Too long
 			];
 
 			for (const token of validTokens) {

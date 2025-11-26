@@ -4,7 +4,8 @@ import type { FormValues } from '../types.js';
 import { Main } from './main.js';
 
 export function EmailVerifyForm({ values }: FormValues): HtmlEscapedString | Promise<HtmlEscapedString> {
-	return Main(html`
+	return Main(
+		html`
 		<h1>Verify Your Email</h1>
 		<p>Click the button to verify your email.</p>
 		<form id="verify-email-form" method="POST" action="/verify-email">
@@ -14,6 +15,7 @@ export function EmailVerifyForm({ values }: FormValues): HtmlEscapedString | Pro
 		<script>
 			document.addEventListener('DOMContentLoaded', () => document.getElementById('verify-email-form').submit());
 		</script>
-		`, { title: 'Verify Email' }
+		`,
+		{ title: 'Verify Email' },
 	);
 }

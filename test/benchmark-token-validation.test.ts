@@ -22,6 +22,7 @@ function isValidToken2(token: string): boolean {
 const validToken = 'Abc123_-Z';
 const invalidToken = 'Abc123!@#';
 const longToken = 'A'.repeat(256);
+// biome-ignore format: keep aligned
 const tokens = [
 	validToken, invalidToken, longToken, '', 'short', SECURE_TOKEN_ALPHABET,
 	'6RyOycCtsoeTh', 'cODb0JOO5L2SV', '8J4BtQAA4Bu9n',
