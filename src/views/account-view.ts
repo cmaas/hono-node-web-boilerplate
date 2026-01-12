@@ -13,21 +13,19 @@ export function AccountView(props: { account: Account; session: SessionToken; ac
 			<span style="padding:1px 5px;border-radius:20px;background-color:${props.account.emailVerified > 0 ? 'oklch(93.8% 0.127 124.321)' : 'oklch(88.5% 0.062 18.334)'}">${props.account.email}</span>
 		</p>
 		<p><a href="/account/change-email">change email</a> <a href="/account/change-password">change password</a></p>
-		${
-			props.account.emailVerified <= 0 &&
+		${props.account.emailVerified <= 0 &&
 			html`
 			<form action="/account/request-verification" method="post">
 				<button style="width:auto;" type="submit">Request email verification</button>
 			</form>
 		`
-		}
+			}
 		<div style="display: flex; gap: 0.5rem;">
 			<form action="/account/logout" method="post">
 				<button style="width:auto;" type="submit">Logout</button>
 			</form>
-			${
-				props.activeSessions.length > 1 &&
-				html`
+			${props.activeSessions.length > 1 &&
+			html`
 			<form action="/account/logout/all" method="post">
 				<button style="width:auto;" type="submit">Logout all devices</button>
 			</form>
@@ -44,13 +42,12 @@ export function AccountView(props: { account: Account; session: SessionToken; ac
 					Session ID: ${session.id} <br>
 					First seen: ${new Date(session.created).toLocaleString()}<br>
 					Last seen: ${new Date(session.payload?.lastActivity || 0).toLocaleString()}<br>
-					${session.payload?.previousVisit ? `Previous visit: ${new Date(session.payload?.previousVisit).toLocaleString()}<br>` : ''}
+					${session.payload?.previousVisit ? html`Previous visit: ${new Date(session.payload?.previousVisit).toLocaleString()}<br>` : ''}
 					Device: ${session.payload?.userAgent} <br>
 					Expires: ${new Date(session.expires).toLocaleString()} <br>
-					${
-						session.id === props.session.id
-							? html`<strong>(Current Session)</strong>`
-							: html`
+					${session.id === props.session.id
+						? html`<strong>(Current Session)</strong>`
+						: html`
 							<form action="/account/revoke-session/${session.id}" method="post" style="display:inline;" onsubmit="return confirmRevoke(event)">
 								<button type="submit" style="width:auto;background-color:#d32f2f;">Revoke Session</button>
 							</form>
