@@ -156,13 +156,12 @@ app.post('/change-email', requireAccount, async (c) => {
 	const body = await c.req.parseBody();
 	const email = (<string>body.email || '').trim();
 	const currentPassword = (<string>body.currentPassword || '').trim();
+	const elevationRemaining = getPrivilegeElevationRemaining(c, session);
 
 	if (!email) {
-		const elevationRemaining = getPrivilegeElevationRemaining(c, session);
 		return c.html(ChangeEmailForm({ values: { email, currentPassword }, errors: [{ field: 'email', message: 'Please provide a new email address' }], elevated, elevationRemaining }));
 	}
 	if (!isValidEmail(email)) {
-		const elevationRemaining = getPrivilegeElevationRemaining(c, session);
 		return c.html(ChangeEmailForm({ values: { email, currentPassword }, errors: [{ field: 'email', message: 'Invalid email address' }], elevated, elevationRemaining }));
 	}
 
@@ -180,7 +179,6 @@ app.post('/change-email', requireAccount, async (c) => {
 	}
 
 	if (getAccountByEmail(email)) {
-		const elevationRemaining = getPrivilegeElevationRemaining(c, session);
 		return c.html(ChangeEmailForm({ values: { email, currentPassword }, errors: [{ field: 'email', message: 'Email is already in use' }], elevated: true, elevationRemaining }));
 	}
 
