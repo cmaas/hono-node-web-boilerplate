@@ -5,3 +5,8 @@ export type FormValues = {
 		message: string;
 	}>;
 };
+
+export type SensitiveFormValues = FormValues & {
+	elevated: boolean;
+	elevationRemaining: number; // milliseconds remaining
+};

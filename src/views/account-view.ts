@@ -2,8 +2,22 @@ import { html } from 'hono/html';
 import type { HtmlEscapedString } from 'hono/utils/html';
 import type { Account } from '../models/account.js';
 import type { SessionToken } from '../models/token.js';
-import type { FormValues } from '../types.js';
+import type { SensitiveFormValues } from '../types.js';
 import { Main, MainReduced } from './main.js';
+
+/**
+ * Format remaining elevation time as "Xm Ys" or "Ys" if less than a minute
+ */
+function formatElevationTime(remainingMs: number): string {
+	if (remainingMs <= 0) return '';
+	const totalSeconds = Math.ceil(remainingMs / 1000);
+	const minutes = Math.floor(totalSeconds / 60);
+	const seconds = totalSeconds % 60;
+	if (minutes > 0) {
+		return `${minutes}m ${seconds}s`;
+	}
+	return `${seconds}s`;
+}
 
 export function AccountView(props: { account: Account; session: SessionToken; activeSessions: Array<SessionToken> }): HtmlEscapedString | Promise<HtmlEscapedString> {
 	return Main(
@@ -13,19 +27,21 @@ export function AccountView(props: { account: Account; session: SessionToken; ac
 			<span style="padding:1px 5px;border-radius:20px;background-color:${props.account.emailVerified > 0 ? 'oklch(93.8% 0.127 124.321)' : 'oklch(88.5% 0.062 18.334)'}">${props.account.email}</span>
 		</p>
 		<p><a href="/account/change-email">change email</a> <a href="/account/change-password">change password</a></p>
-		${props.account.emailVerified <= 0 &&
+		${
+			props.account.emailVerified <= 0 &&
 			html`
 			<form action="/account/request-verification" method="post">
 				<button style="width:auto;" type="submit">Request email verification</button>
 			</form>
 		`
-			}
+		}
 		<div style="display: flex; gap: 0.5rem;">
 			<form action="/account/logout" method="post">
 				<button style="width:auto;" type="submit">Logout</button>
 			</form>
-			${props.activeSessions.length > 1 &&
-			html`
+			${
+				props.activeSessions.length > 1 &&
+				html`
 			<form action="/account/logout/all" method="post">
 				<button style="width:auto;" type="submit">Logout all devices</button>
 			</form>
@@ -45,9 +61,10 @@ export function AccountView(props: { account: Account; session: SessionToken; ac
 					${session.payload?.previousVisit ? html`Previous visit: ${new Date(session.payload?.previousVisit).toLocaleString()}<br>` : ''}
 					Device: ${session.payload?.userAgent} <br>
 					Expires: ${new Date(session.expires).toLocaleString()} <br>
-					${session.id === props.session.id
-						? html`<strong>(Current Session)</strong>`
-						: html`
+					${
+						session.id === props.session.id
+							? html`<strong>(Current Session)</strong>`
+							: html`
 							<form action="/account/revoke-session/${session.id}" method="post" style="display:inline;" onsubmit="return confirmRevoke(event)">
 								<button type="submit" style="width:auto;background-color:#d32f2f;">Revoke Session</button>
 							</form>
@@ -80,17 +97,24 @@ export function AccountView(props: { account: Account; session: SessionToken; ac
 	);
 }
 
-export function ChangePasswordForm({ values, errors }: FormValues): HtmlEscapedString | Promise<HtmlEscapedString> {
+export function ChangePasswordForm({ values, errors, elevated, elevationRemaining }: SensitiveFormValues): HtmlEscapedString | Promise<HtmlEscapedString> {
 	return MainReduced(
 		html`
 		<form action="/account/change-password" method="post">
 			<article class="stack">
 				<h1>Change Password</h1>
+				${elevated ? html`<p style="color: #2e7d32; font-size: 0.9em;">🔓 Elevated access (${formatElevationTime(elevationRemaining)} remaining)</p>` : ''}
 				${errors.length > 0 ? html`<ul class="error" style="color:red;">${errors.map((err) => html`<li>${err.message}</li>`)}</ul>` : ''}
 				<label for="password">New Password:</label>
-				<input style="--spacing-md: 0.5rem;" type="text" name="password" id="password" value="${values.password}" placeholder="New Password" required>
-				<label for="current-password">Current Password:</label>
-				<input style="--spacing-md: 0.5rem;" type="text" name="currentPassword" id="current-password" value="${values.currentPassword}" placeholder="Current Password" required>
+				<input style="--spacing-md: 0.5rem;" type="password" name="password" id="password" value="${values.password}" placeholder="New Password" required>
+				${
+					!elevated
+						? html`
+						<label for="current-password">Current Password:</label>
+						<input style="--spacing-md: 0.5rem;" type="password" name="currentPassword" id="current-password" value="${values.currentPassword}" placeholder="Current Password" required>
+					`
+						: ''
+				}
 				<footer>
 					<a href="/account">Cancel</a>
 					<button style="width:auto;" type="submit">Change Password</button>
@@ -102,17 +126,24 @@ export function ChangePasswordForm({ values, errors }: FormValues): HtmlEscapedS
 	);
 }
 
-export function ChangeEmailForm({ values, errors }: FormValues): HtmlEscapedString | Promise<HtmlEscapedString> {
+export function ChangeEmailForm({ values, errors, elevated, elevationRemaining }: SensitiveFormValues): HtmlEscapedString | Promise<HtmlEscapedString> {
 	return MainReduced(
 		html`
 		<form action="/account/change-email" method="post">
 			<article class="stack">
 				<h1>Change Email Address</h1>
+				${elevated ? html`<p style="color: #2e7d32; font-size: 0.9em;">🔓 Elevated access (${formatElevationTime(elevationRemaining)} remaining)</p>` : ''}
 				${errors.length > 0 ? html`<ul class="error" style="color:red;">${errors.map((err) => html`<li>${err.message}</li>`)}</ul>` : ''}
-				<label for="password">New Email:</label>
-				<input style="--spacing-md: 0.5rem;" type="text" name="email" id="email" value="${values.email}" placeholder="New Email" required>
-				<label for="current-password">Current Password:</label>
-				<input style="--spacing-md: 0.5rem;" type="text" name="currentPassword" id="current-password" value="${values.currentPassword}" placeholder="Current Password" required>
+				<label for="email">New Email:</label>
+				<input style="--spacing-md: 0.5rem;" type="email" name="email" id="email" value="${values.email}" placeholder="New Email" required>
+				${
+					!elevated
+						? html`
+						<label for="current-password">Current Password:</label>
+						<input style="--spacing-md: 0.5rem;" type="password" name="currentPassword" id="current-password" value="${values.currentPassword}" placeholder="Current Password" required>
+					`
+						: ''
+				}
 				<footer>
 					<a href="/account">Cancel</a>
 					<button type="submit">Change Email</button>
@@ -120,6 +151,6 @@ export function ChangeEmailForm({ values, errors }: FormValues): HtmlEscapedStri
 			</article>
 		</form>
 		`,
-		{ title: 'Change Password' },
+		{ title: 'Change Email' },
 	);
 }

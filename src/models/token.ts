@@ -21,6 +21,8 @@ export interface SessionPayload {
 	userAgent?: string;
 	lastActivity?: number; // UNIX timestamp in milliseconds
 	previousVisit?: number; // UNIX timestamp in milliseconds
+	privilegeElevationToken?: string;
+	privilegeElevatedAt?: number; // UNIX timestamp in milliseconds
 }
 export interface VerifyEmailPayload {
 	email: string;

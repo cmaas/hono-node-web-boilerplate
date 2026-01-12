@@ -50,6 +50,9 @@ Open [localhost:3000](http://localhost:3000/) in your browser and sign up a new 
 
 ## Changelog
 
+### 1.3.0 (2026-01-12)
+- Added: Privilege elevation when changing password so that the user doesn't have to enter their current password again after a critical operation. Applies to: change email, change password, reset password
+
 ### 1.2.0 (2025-11-26)
 - Added: pagination utils, session last visit tracking, better logging, more events in user flow, session management, logout all sessions
 

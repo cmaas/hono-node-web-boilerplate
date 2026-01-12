@@ -1,14 +1,109 @@
 import type { Context } from 'hono';
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
 import type { MiddlewareHandler } from 'hono/types';
+import { GlobalConfig } from '../config.js';
 import { getAccount } from '../models/account.js';
-import { deleteSessionToken, getSessionToken, type SessionToken } from '../models/token.js';
+import { deleteSessionToken, getSessionToken, type SessionPayload, type SessionToken, updateTokenPayload } from '../models/token.js';
+import { generateSecureToken } from '../util.js';
 
 export function initSessionCookie(c: Context, session: SessionToken) {
 	setCookie(c, 'sid', session.id, { sameSite: 'Lax', path: '/', httpOnly: true });
 }
 export function clearSessionCookie(c: Context) {
 	deleteCookie(c, 'sid');
+}
+
+/**
+ * Set privilege elevation for the current session.
+ * Creates a random token stored in both the session and a separate cookie.
+ * The elevation expires after TIMEOUT_PRIVILEGE_ELEVATION.
+ */
+export function elevatePrivilege(c: Context, session: SessionToken): void {
+	const token = generateSecureToken(32);
+	const now = Date.now();
+
+	// Update session payload with elevation info
+	if (!session.payload) {
+		session.payload = {};
+	}
+	session.payload.privilegeElevationToken = token;
+	session.payload.privilegeElevatedAt = now;
+	updateTokenPayload<SessionPayload>(session.id, 'session', session.payload);
+
+	// Set short-lived privilege cookie
+	const maxAgeSeconds = Math.floor(GlobalConfig.TIMEOUT_PRIVILEGE_ELEVATION / 1000);
+	setCookie(c, 'priv', token, {
+		sameSite: 'Strict',
+		path: '/',
+		httpOnly: true,
+		maxAge: maxAgeSeconds,
+	});
+}
+
+/**
+ * Clear privilege elevation for the current session.
+ */
+export function clearPrivilegeElevation(c: Context, session: SessionToken): void {
+	if (session.payload) {
+		delete session.payload.privilegeElevationToken;
+		delete session.payload.privilegeElevatedAt;
+		updateTokenPayload<SessionPayload>(session.id, 'session', session.payload);
+	}
+	deleteCookie(c, 'priv', { sameSite: 'Strict', path: '/', httpOnly: true });
+}
+
+/**
+ * Check if the current session has valid privilege elevation.
+ */
+export function isPrivilegeElevated(c: Context, session: SessionToken | null): boolean {
+	if (!session?.payload?.privilegeElevationToken || !session?.payload?.privilegeElevatedAt) {
+		return false;
+	}
+
+	const cookieToken = getCookie(c, 'priv');
+	if (!cookieToken) {
+		return false;
+	}
+
+	// Constant-time comparison to prevent timing attacks
+	if (!timingSafeEqual(cookieToken, session.payload.privilegeElevationToken)) {
+		return false;
+	}
+
+	// Check if elevation has expired
+	const elapsed = Date.now() - session.payload.privilegeElevatedAt;
+	if (elapsed > GlobalConfig.TIMEOUT_PRIVILEGE_ELEVATION) {
+		return false;
+	}
+
+	return true;
+}
+
+/**
+ * Get remaining time of privilege elevation in milliseconds.
+ * Returns 0 if not elevated or expired.
+ */
+export function getPrivilegeElevationRemaining(c: Context, session: SessionToken | null): number {
+	if (!isPrivilegeElevated(c, session)) {
+		return 0;
+	}
+	const elapsed = Date.now() - (session?.payload?.privilegeElevatedAt || 0);
+	const remaining = GlobalConfig.TIMEOUT_PRIVILEGE_ELEVATION - elapsed;
+	return Math.max(0, remaining);
+}
+
+/**
+ * Constant-time string comparison to prevent timing attacks.
+ */
+function timingSafeEqual(a: string, b: string): boolean {
+	if (a.length !== b.length) {
+		return false;
+	}
+	let result = 0;
+	for (let i = 0; i < a.length; i++) {
+		result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+	}
+	return result === 0;
 }
 
 export function sessionMiddleware(): MiddlewareHandler {

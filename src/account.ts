@@ -4,7 +4,7 @@ import { EMAIL_VERIFY, sendEmail } from './email.js';
 import { EVENTS, eventBus } from './index.js';
 import { type Account, getAccountByEmail, terminateAllSessionsForAccount, updateAccount, updateAccountPassword } from './models/account.js';
 import { createSessionToken, createVerifyEmailToken, deleteSessionToken, getSessionTokensForAccount, type SessionPayload, type SessionToken } from './models/token.js';
-import { clearSessionCookie, initSessionCookie } from './plugins/server-session.js';
+import { clearPrivilegeElevation, clearSessionCookie, elevatePrivilege, getPrivilegeElevationRemaining, initSessionCookie, isPrivilegeElevated } from './plugins/server-session.js';
 import { isSamePassword, isValidEmail, satisfiesPasswordPolicy } from './util.js';
 import { AccountView, ChangeEmailForm, ChangePasswordForm } from './views/account-view.js';
 import { ErrorRedirectLogin } from './views/error-redirect-login.js';
@@ -90,59 +90,100 @@ app.post('/request-verification', requireAccount, async (c) => {
 });
 
 app.get('/change-password', requireAccount, (c) => {
-	return c.html(ChangePasswordForm({ values: {}, errors: [] }));
+	const session = <SessionToken>c.get('session');
+	const elevated = isPrivilegeElevated(c, session);
+	const elevationRemaining = getPrivilegeElevationRemaining(c, session);
+	return c.html(ChangePasswordForm({ values: {}, errors: [], elevated, elevationRemaining }));
 });
 
 app.post('/change-password', requireAccount, async (c) => {
 	const account = <Account>c.get('account');
+	const session = <SessionToken>c.get('session');
+	const elevated = isPrivilegeElevated(c, session);
 	const body = await c.req.parseBody();
-	const password = (<string>body.password).trim();
-	const currentPassword = (<string>body.currentPassword).trim();
-	if (!password || !currentPassword) {
-		return c.html(ChangePasswordForm({ values: { password, currentPassword }, errors: [{ field: 'password', message: 'Please provide both current and new password' }] }));
+	const password = (<string>body.password || '').trim();
+	const currentPassword = (<string>body.currentPassword || '').trim();
+
+	// If not elevated, require current password
+	if (!elevated) {
+		if (!currentPassword) {
+			return c.html(ChangePasswordForm({ values: { password, currentPassword }, errors: [{ field: 'currentPassword', message: 'Please provide your current password' }], elevated, elevationRemaining: 0 }));
+		}
+		const isCorrectPassword = await isSamePassword(account.password, currentPassword);
+		if (!isCorrectPassword) {
+			return c.html(ChangePasswordForm({ values: { password, currentPassword }, errors: [{ field: 'currentPassword', message: 'Current password is incorrect' }], elevated, elevationRemaining: 0 }));
+		}
 	}
-	const isCorrectPassword = await isSamePassword(account.password, currentPassword);
-	if (!isCorrectPassword) {
-		return c.html(ChangePasswordForm({ values: { password, currentPassword }, errors: [{ field: 'currentPassword', message: 'Current password is incorrect' }] }));
+
+	if (!password) {
+		const elevationRemaining = getPrivilegeElevationRemaining(c, session);
+		return c.html(ChangePasswordForm({ values: { password, currentPassword }, errors: [{ field: 'password', message: 'Please provide a new password' }], elevated, elevationRemaining }));
 	}
 	if (!satisfiesPasswordPolicy(password)) {
-		return c.html(ChangePasswordForm({ values: { password, currentPassword }, errors: [{ field: 'password', message: 'New password must have at least 8 characters and should not be trivial' }] }));
+		const elevationRemaining = getPrivilegeElevationRemaining(c, session);
+		return c.html(ChangePasswordForm({ values: { password, currentPassword }, errors: [{ field: 'password', message: 'New password must have at least 8 characters and should not be trivial' }], elevated, elevationRemaining }));
 	}
 
 	const result = await updateAccountPassword(account.id, password);
 	if (!result) {
 		return c.html(ErrorView({ message: 'Failed to update password. Please send a message to our customer support.' }));
 	}
+
+	// Clear old session and privilege, terminate all other sessions
+	clearPrivilegeElevation(c, session);
 	clearSessionCookie(c);
 	terminateAllSessionsForAccount(account.id);
-	const session = createSessionToken(account.id, { userAgent: c.req.header('User-Agent') || '' }); // server
-	initSessionCookie(c, session); // client
+
+	// Create new session and elevate privilege (user just proved identity)
+	const newSession = createSessionToken(account.id, { userAgent: c.req.header('User-Agent') || '' });
+	initSessionCookie(c, newSession);
+	elevatePrivilege(c, newSession);
 
 	return c.html(SuccessView({ message: 'Your password has been changed' }));
 });
 
 app.get('/change-email', requireAccount, (c) => {
-	return c.html(ChangeEmailForm({ values: {}, errors: [] }));
+	const session = <SessionToken>c.get('session');
+	const elevated = isPrivilegeElevated(c, session);
+	const elevationRemaining = getPrivilegeElevationRemaining(c, session);
+	return c.html(ChangeEmailForm({ values: {}, errors: [], elevated, elevationRemaining }));
 });
 
 app.post('/change-email', requireAccount, async (c) => {
 	const account = <Account>c.get('account');
+	const session = <SessionToken>c.get('session');
+	const elevated = isPrivilegeElevated(c, session);
 	const body = await c.req.parseBody();
-	const email = (<string>body.email).trim();
-	const currentPassword = (<string>body.currentPassword).trim();
-	if (!email || !currentPassword) {
-		return c.html(ChangeEmailForm({ values: { email, currentPassword }, errors: [{ field: 'email', message: 'Please provide both email and new password' }] }));
+	const email = (<string>body.email || '').trim();
+	const currentPassword = (<string>body.currentPassword || '').trim();
+
+	if (!email) {
+		const elevationRemaining = getPrivilegeElevationRemaining(c, session);
+		return c.html(ChangeEmailForm({ values: { email, currentPassword }, errors: [{ field: 'email', message: 'Please provide a new email address' }], elevated, elevationRemaining }));
 	}
 	if (!isValidEmail(email)) {
-		return c.html(ChangeEmailForm({ values: { email, currentPassword }, errors: [{ field: 'email', message: 'Invalid email address' }] }));
+		const elevationRemaining = getPrivilegeElevationRemaining(c, session);
+		return c.html(ChangeEmailForm({ values: { email, currentPassword }, errors: [{ field: 'email', message: 'Invalid email address' }], elevated, elevationRemaining }));
 	}
-	const isCorrectPassword = await isSamePassword(account.password, currentPassword);
-	if (!isCorrectPassword) {
-		return c.html(ChangeEmailForm({ values: { email, currentPassword }, errors: [{ field: 'currentPassword', message: 'Current password is incorrect' }] }));
+
+	// If not elevated, require current password
+	if (!elevated) {
+		if (!currentPassword) {
+			return c.html(ChangeEmailForm({ values: { email, currentPassword }, errors: [{ field: 'currentPassword', message: 'Please provide your current password' }], elevated, elevationRemaining: 0 }));
+		}
+		const isCorrectPassword = await isSamePassword(account.password, currentPassword);
+		if (!isCorrectPassword) {
+			return c.html(ChangeEmailForm({ values: { email, currentPassword }, errors: [{ field: 'currentPassword', message: 'Current password is incorrect' }], elevated, elevationRemaining: 0 }));
+		}
+		// Password verified, elevate privilege for subsequent actions
+		elevatePrivilege(c, session);
 	}
+
 	if (getAccountByEmail(email)) {
-		return c.html(ChangeEmailForm({ values: { email, currentPassword }, errors: [{ field: 'email', message: 'Email is already in use' }] }));
+		const elevationRemaining = getPrivilegeElevationRemaining(c, session);
+		return c.html(ChangeEmailForm({ values: { email, currentPassword }, errors: [{ field: 'email', message: 'Email is already in use' }], elevated: true, elevationRemaining }));
 	}
+
 	// note: a more sophisticated flow for changing the email address is described here:
 	// https://owasp.org/www-community/pages/controls/Changing_Registered_Email_Address_For_An_Account
 	const oldEmail = account.email;

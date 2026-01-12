@@ -21,7 +21,7 @@ import cronApp from './cron.js';
 import { EMAIL_VERIFY, sendEmail } from './email.js';
 import { type Account, createAccount, getAccount, getAccountByEmail, terminateAllSessionsForAccount, updateAccount, updateAccountPassword } from './models/account.js';
 import { createPasswordResetToken, createSessionToken, createVerifyEmailToken, deletePasswordResetToken, getPasswordResetToken, getVerifyEmailToken, type SessionToken, updateLastSessionActivity } from './models/token.js';
-import { clearSessionCookie, initSessionCookie, sessionMiddleware } from './plugins/server-session.js';
+import { clearSessionCookie, elevatePrivilege, initSessionCookie, sessionMiddleware } from './plugins/server-session.js';
 import { isSamePassword, isValidEmail, isValidToken, satisfiesPasswordPolicy } from './util.js';
 import { EmailVerifyForm } from './views/email-verification.js';
 import { ErrorView, SuccessView } from './views/generic.js';
@@ -267,6 +267,9 @@ app.post('/set-password', async (c) => {
 	// because they just proved they own the email address by clicking the link in their email
 	const session = createSessionToken(account.id, { userAgent: c.req.header('User-Agent') || '' }); // server
 	initSessionCookie(c, session); // client
+
+	// elevate privilege since user just proved ownership via email link
+	elevatePrivilege(c, session);
 
 	// opinionated: verify email address if it is not verified yet, because the user just clicked
 	// a link in their email, so they must own the email address
