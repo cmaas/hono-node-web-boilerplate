@@ -1,6 +1,6 @@
 import { html } from 'hono/html';
 import type { HtmlEscapedString } from 'hono/utils/html';
-import type { Account } from '../models/account.js';
+import type { Account } from '../domain/account.js';
 import { MainReduced } from './main.js';
 import { Pagination } from './pagination.js';
 

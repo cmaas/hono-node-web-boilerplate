@@ -48,7 +48,16 @@ Open [localhost:3000](http://localhost:3000/) in your browser and sign up a new 
 - Full admin functionality to edit users, resend verification tokens etc.
 - integrating an SMTP service to actually send emails
 
+
 ## Changelog
+
+### 1.4.0 (2026-02-10)
+- Major refactor after having used this in a project. Backported best practices.
+- Added: login by token
+- Added: trivial password check and loading script
+- Changed: folder structure now better separates responsibilities and shows app layers
+- Changed: change password, change email, delete account require current password, but we now have an "elevated privilege" mode and a specific form that elevates privileges
+- Changed: EventEmitter replaced with simple `audit()`
 
 ### 1.3.0 (2026-01-12)
 - Added: Privilege elevation when changing password so that the user doesn't have to enter their current password again after a critical operation. Applies to: change email, change password, reset password

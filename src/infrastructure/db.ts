@@ -37,10 +37,9 @@ function initializeSchema() {
 	// Initialize database schema from SQL file
 	const __filename = fileURLToPath(import.meta.url);
 	const __dirname = dirname(__filename);
-	const schemaPath = resolve(__dirname, '../sql/000_setup.sql');
+	const schemaPath = resolve(__dirname, '../../sql/000_setup.sql');
 	const schemaSql = readFileSync(schemaPath, 'utf8');
 	db.exec(schemaSql);
 }
 
-// Initialize schema for the default database
 initializeSchema();

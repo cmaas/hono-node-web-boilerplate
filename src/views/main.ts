@@ -1,6 +1,6 @@
 import { html, raw } from 'hono/html';
 import type { HtmlEscapedString } from 'hono/utils/html';
-import type { Account } from '../models/account.js';
+import type { Account } from '../domain/account.js';
 import { Layout, type SiteMetaData } from './layout.js';
 
 export function Main(children: HtmlEscapedString | Promise<HtmlEscapedString>, siteMetaData: SiteMetaData, props?: { account: Account }): HtmlEscapedString | Promise<HtmlEscapedString> {

@@ -1,39 +1,7 @@
 import { GlobalConfig } from '../config.js';
-import { db } from '../db.js';
-import { generateSecureToken } from '../util.js';
-
-export type TokenType = 'session' | 'verifyEmail' | 'passwordReset';
-
-export interface Token<T> {
-	id: string;
-	created: number;
-	expires: number;
-	accountId: string;
-	type: TokenType;
-	payload: T | null;
-}
-
-interface TokenDTO extends Omit<Token<string>, 'payload'> {
-	payload: string;
-}
-
-export interface SessionPayload {
-	userAgent?: string;
-	lastActivity?: number; // UNIX timestamp in milliseconds
-	previousVisit?: number; // UNIX timestamp in milliseconds
-	privilegeElevationToken?: string;
-	privilegeElevatedAt?: number; // UNIX timestamp in milliseconds
-}
-export interface VerifyEmailPayload {
-	email: string;
-}
-export interface PasswordResetPayload {
-	userAgent?: string;
-}
-
-export type SessionToken = Token<SessionPayload>;
-export type VerifyEmailToken = Token<VerifyEmailPayload>;
-export type PasswordResetToken = Token<PasswordResetPayload>;
+import type { LoginToken, LoginTokenPayload, PasswordResetPayload, PasswordResetToken, SessionPayload, SessionToken, Token, TokenDTO, TokenType, VerifyEmailPayload, VerifyEmailToken } from '../domain/token.js';
+import { db } from '../infrastructure/db.js';
+import { generateSecureToken } from '../utils/util.js';
 
 // ----- Helper Functions -----
 function marshallPayload<T>(payload: T | null): string {
@@ -125,7 +93,7 @@ export function deleteVerifyEmailToken(id: string): void {
 }
 
 // ----- Password Reset Tokens -----
-export function createPasswordResetToken(accountId: string, payload: { userAgent: string }): PasswordResetToken {
+export function createPasswordResetToken(accountId: string, payload: PasswordResetPayload): PasswordResetToken {
 	const expires = Date.now() + GlobalConfig.TIMEOUT_PASSWORD_RESET;
 	return createRawToken<PasswordResetPayload>(accountId, expires, 'passwordReset', payload);
 }
@@ -134,6 +102,18 @@ export function getPasswordResetToken(id: string): PasswordResetToken | null {
 }
 export function deletePasswordResetToken(id: string): void {
 	deleteRawToken(id, 'passwordReset');
+}
+
+// ----- Login Tokens -----
+export function createLoginToken(accountId: string, payload: LoginTokenPayload): LoginToken {
+	const expires = Date.now() + GlobalConfig.TIMEOUT_LOGIN_TOKEN;
+	return createRawToken<LoginTokenPayload>(accountId, expires, 'login', payload);
+}
+export function getLoginToken(id: string): LoginToken | null {
+	return getRawToken<LoginTokenPayload>(id, 'login');
+}
+export function deleteLoginToken(id: string): void {
+	deleteRawToken(id, 'login');
 }
 
 // ----- Generic Token Payload Update -----
@@ -146,8 +126,6 @@ export function updateTokenPayload<T>(id: string, type: TokenType, payload: T): 
 /**
  * Keeps track of the last activity of the session. After a certain period of inactivity,
  * the last activity timestamp becomes the previousVisit timestamp.
- * @param session The session token to update
- * @returns
  */
 export function updateLastSessionActivity(session: SessionToken | null): void {
 	if (!session || !session.payload) {

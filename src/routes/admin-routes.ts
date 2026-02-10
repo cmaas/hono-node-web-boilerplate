@@ -1,11 +1,12 @@
 import type { HttpBindings } from '@hono/node-server';
 import { type Context, Hono, type Next } from 'hono';
-import { type Account, getAccount } from './models/account.js';
-import { searchAccounts } from './models/admin.js';
-import type { SessionPayload } from './models/token.js';
-import { AdminAccountDetailsView, AdminView } from './views/admin-view.js';
-import { ErrorRedirectLogin } from './views/error-redirect-login.js';
-import { ErrorView } from './views/generic.js';
+import type { Account } from '../domain/account.js';
+import type { SessionPayload } from '../domain/token.js';
+import { getAccount } from '../repositories/account-repository.js';
+import { searchAccounts } from '../repositories/admin-repository.js';
+import { AdminAccountDetailsView, AdminView } from '../views/admin-view.js';
+import { ErrorRedirectLogin } from '../views/error-redirect-login.js';
+import { ErrorView } from '../views/generic.js';
 
 type Bindings = HttpBindings & {
 	/* ... */
@@ -24,8 +25,7 @@ const requireAdminAccount = async (c: Context, next: Next) => {
 	return next();
 };
 
-// here we are in a sub-app of Hono, actual route for this is: /admin
-app.get('/', requireAdminAccount, (c) => {
+app.get('/admin', requireAdminAccount, (c) => {
 	const q = c.req.query('q') || '';
 	const pageParam = c.req.query('page');
 	const page = pageParam ? Math.max(1, Number.parseInt(pageParam, 10)) : 1;
@@ -45,7 +45,7 @@ app.get('/', requireAdminAccount, (c) => {
 	);
 });
 
-app.get('/account-details', requireAdminAccount, (c) => {
+app.get('/admin/account-details', requireAdminAccount, (c) => {
 	const id = c.req.query('id');
 	if (!id) {
 		return c.html(ErrorView({ message: 'No account ID provided.' }), 400);

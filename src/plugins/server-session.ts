@@ -2,9 +2,10 @@ import type { Context } from 'hono';
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
 import type { MiddlewareHandler } from 'hono/types';
 import { GlobalConfig } from '../config.js';
-import { getAccount } from '../models/account.js';
-import { deleteSessionToken, getSessionToken, type SessionPayload, type SessionToken, updateTokenPayload } from '../models/token.js';
-import { generateSecureToken } from '../util.js';
+import type { SessionPayload, SessionToken } from '../domain/token.js';
+import { getAccount } from '../repositories/account-repository.js';
+import { deleteSessionToken, getSessionToken, updateTokenPayload } from '../repositories/token-repository.js';
+import { generateSecureToken } from '../utils/util.js';
 
 export function initSessionCookie(c: Context, session: SessionToken) {
 	setCookie(c, 'sid', session.id, { sameSite: 'Lax', path: '/', httpOnly: true });
@@ -90,6 +91,29 @@ export function getPrivilegeElevationRemaining(c: Context, session: SessionToken
 	const elapsed = Date.now() - (session?.payload?.privilegeElevatedAt || 0);
 	const remaining = GlobalConfig.TIMEOUT_PRIVILEGE_ELEVATION - elapsed;
 	return Math.max(0, remaining);
+}
+
+/**
+ * Store a flash message in the session. Will be read and cleared on the next page load.
+ */
+export function setSessionFlash(session: SessionToken, flash: { type: 'success' | 'error' | 'info'; message: string }): void {
+	if (!session.payload) {
+		session.payload = {};
+	}
+	session.payload.flash = flash;
+	updateTokenPayload<SessionPayload>(session.id, 'session', session.payload);
+}
+
+/**
+ * Read and clear the flash message from the session. Returns null if no flash is set.
+ */
+export function consumeSessionFlash(session: SessionToken): { type: 'success' | 'error' | 'info'; message: string } | null {
+	const flash = session.payload?.flash ?? null;
+	if (flash) {
+		delete session.payload?.flash;
+		updateTokenPayload<SessionPayload>(session.id, 'session', session.payload!);
+	}
+	return flash;
 }
 
 /**

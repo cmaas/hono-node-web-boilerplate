@@ -1,10 +1,5 @@
-import { db } from '../db.js';
-import type { Account } from './account.js';
-
-export interface PaginatedAccounts {
-	accounts: Array<Account>;
-	totalCount: number;
-}
+import type { Account, PaginatedAccounts } from '../domain/account.js';
+import { db } from '../infrastructure/db.js';
 
 export function getRecentAccounts(page = 1, perPage = 50): PaginatedAccounts {
 	const offset = (page - 1) * perPage;

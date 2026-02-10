@@ -1,4 +1,4 @@
-import { db } from '../db.js';
+import { db } from '../infrastructure/db.js';
 
 export function deleteExpiredTokens(): number {
 	const now = Date.now();

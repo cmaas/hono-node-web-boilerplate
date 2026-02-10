@@ -1,6 +1,6 @@
 {
 	"name": "hono-node-web-boilerplate",
-	"version": "1.3.0",
+	"version": "1.4.0",
 	"description": "A small boilerplate / starter project for Hono on Node.js with SQLite, server-side template rendering using Hono's html and basic account functionality.",
 	"keywords": [
 		"hono",
@@ -15,21 +15,24 @@
 	"repository": "github:cmaas/hono-node-web-boilerplate",
 	"type": "module",
 	"scripts": {
+		"build": "tsgo --noEmit",
 		"dev": "tsx watch src/index.ts",
+		"load-trivial-passwords": "tsx scripts/load-trivial-passwords.ts ./data/trivial-passwords.txt",
 		"test": "NODE_ENV=test node --import tsx --test test/*.test.ts",
 		"test:account": "NODE_ENV=test node --import tsx --test test/account-creation.test.ts",
 		"test:integration": "NODE_ENV=test node --import tsx --test test/signup-integration.test.ts",
 		"test:benchmark": "NODE_ENV=test node --import tsx --test test/benchmark-token-validation.test.ts"
 	},
 	"dependencies": {
-		"@hono/node-server": "1.19.6",
+		"@hono/node-server": "1.19.9",
 		"bcryptjs": "3.0.3",
-		"better-sqlite3": "12.4.1",
-		"hono": "4.10.6"
+		"better-sqlite3": "12.6.2",
+		"hono": "4.11.9"
 	},
 	"devDependencies": {
 		"@types/better-sqlite3": "7.6.13",
-		"@types/node": "24.10.1",
-		"tsx": "4.20.6"
+		"@types/node": "25.2.2",
+		"@typescript/native-preview": "^7.0.0-dev.20260210.1",
+		"tsx": "4.21.0"
 	}
 }

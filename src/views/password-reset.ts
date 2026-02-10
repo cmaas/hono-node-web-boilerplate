@@ -1,6 +1,6 @@
 import { html } from 'hono/html';
 import type { HtmlEscapedString } from 'hono/utils/html';
-import type { FormValues } from '../types.js';
+import type { FormValues } from '../domain/form.js';
 import { MainReduced } from './main.js';
 
 export function PasswordResetRequestForm({ values, errors }: FormValues): HtmlEscapedString | Promise<HtmlEscapedString> {

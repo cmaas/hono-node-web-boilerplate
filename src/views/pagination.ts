@@ -1,6 +1,6 @@
 import { html } from 'hono/html';
 import type { HtmlEscapedString } from 'hono/utils/html';
-import { generatePageNumbers } from '../util.js';
+import { generatePageNumbers } from '../utils/util.js';
 
 export interface PaginationProps {
 	page: number;
@@ -9,21 +9,6 @@ export interface PaginationProps {
 	queryParams?: Record<string, string>;
 }
 
-/**
- * Renders a pagination navigation component.
- *
- * @param props - Pagination properties
- * @param props.page - Current page number (1-indexed)
- * @param props.pageCount - Total number of pages
- * @param props.baseUrl - Base URL for pagination links (defaults to current page with ?page= query param)
- * @param props.queryParams - Additional query parameters to preserve in pagination links
- * @returns HTML for pagination navigation
- *
- * @example
- * Pagination({ page: 5, pageCount: 10 })
- * Pagination({ page: 1, pageCount: 20, baseUrl: '/admin/users' })
- * Pagination({ page: 2, pageCount: 10, baseUrl: '/admin', queryParams: { q: 'search term' } })
- */
 export function Pagination(props: PaginationProps): HtmlEscapedString | Promise<HtmlEscapedString> {
 	const { page, pageCount, baseUrl = '', queryParams = {} } = props;
 

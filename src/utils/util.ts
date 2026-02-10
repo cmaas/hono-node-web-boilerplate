@@ -2,14 +2,6 @@ import { compare, hash } from 'bcryptjs';
 
 const SECURE_TOKEN_ALPHABET = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz-';
 
-export function isValidEmail(s: string): boolean {
-	if (!s || typeof s !== 'string') {
-		return false;
-	}
-	const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-	return re.test(s);
-}
-
 export function generateSecureToken(length = 16) {
 	if (length < 1) {
 		console.warn('generateSecureToken: length must be at least 1, defaulting to 1');
@@ -22,6 +14,42 @@ export function generateSecureToken(length = 16) {
 	const array = new Uint8Array(length);
 	crypto.getRandomValues(array);
 	return Array.from(array, (byte) => SECURE_TOKEN_ALPHABET[byte % SECURE_TOKEN_ALPHABET.length]).join('');
+}
+
+// --- BASIC VALIDATORS ---
+export function simpleEscapeNumber(s: any): number | null {
+	const n = Number(s);
+	if (Number.isNaN(n)) {
+		return null;
+	}
+	return n;
+}
+
+export function simpleEscapeEmail(s: any): string | null {
+	if (typeof s !== 'string') {
+		return null;
+	}
+	const result = s.replaceAll(`'`, '').trim().toLowerCase();
+	return result.length > 0 ? result : null;
+}
+
+export function simpleEscapeString(s: any, maxLen = -1): string | null {
+	if (typeof s !== 'string') {
+		return null;
+	}
+	s = s.trim();
+	if (maxLen > 0 && s.length > maxLen) {
+		s = s.substring(0, maxLen);
+	}
+	return s.length > 0 ? s : null;
+}
+
+export function isValidEmail(s: string): boolean {
+	if (!s || typeof s !== 'string') {
+		return false;
+	}
+	const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+	return re.test(s);
 }
 
 export function isValidToken(token: string | null | undefined): boolean {
@@ -53,9 +81,6 @@ export function satisfiesPasswordPolicy(password: string): boolean {
 	if (password.trim().length < 8) {
 		return false;
 	}
-	/* if (['asdfasdf', 'password', '12345678', 'qwertyuiop'].includes(password.trim().toLowerCase())) {
-		return false;
-	} */
 	return true;
 }
 
