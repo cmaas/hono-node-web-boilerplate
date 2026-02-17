@@ -51,6 +51,9 @@ Open [localhost:3000](http://localhost:3000/) in your browser and sign up a new 
 
 ## Changelog
 
+### 1.5.0 (2026-02-17)
+- Refactored `audit()` function to use `level` and removed `ok` from `data` prop
+
 ### 1.4.0 (2026-02-10)
 - Major refactor after having used this in a project. Backported best practices.
 - Added: login by token
