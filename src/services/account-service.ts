@@ -1,7 +1,7 @@
 import type { Account } from '../domain/account.js';
 import { type AsyncResult, Err, Ok } from '../domain/result.js';
 import { EMAIL_VERIFY, sendEmail } from '../infrastructure/email.js';
-import { audit } from '../infrastructure/events.js';
+import { AuditLevel, audit } from '../infrastructure/events.js';
 import { createAccount, getAccount, getAccountByEmail, terminateAllSessionsForAccount, updateAccount, updateAccountPassword } from '../repositories/account-repository.js';
 import { createVerifyEmailToken } from '../repositories/token-repository.js';
 import { isTrivialPassword } from '../repositories/trivial-passwords-repository.js';
@@ -39,11 +39,11 @@ export async function signup(email: string, password?: string): AsyncResult<{ ac
 	try {
 		account = await createAccount(email, password);
 	} catch (err) {
-		audit('account_create_failed', null, { ok: false, message: (err as Error).message });
+		audit('account_create_failed', null, AuditLevel.ERROR, { message: (err as Error).message });
 		return Err({ type: 'error_creating_account', message: 'Failed to create account. Please try again or contact support.' });
 	}
 
-	audit('account_created', account.id, { ok: true });
+	audit('account_created', account.id, AuditLevel.OK);
 
 	const verifyEmailToken = createVerifyEmailToken(account.id, account.email);
 	sendEmail(account.email, EMAIL_VERIFY.subject, EMAIL_VERIFY.body(verifyEmailToken.id));
@@ -68,7 +68,7 @@ export async function login(email: string, password: string): AsyncResult<{ acco
 	}
 
 	if (!(await isSamePassword(account.password, password))) {
-		audit('account_invalid_password', account.id, { ok: false });
+		audit('account_invalid_password', account.id, AuditLevel.WARN);
 		return Err({ type: 'invalid_password' });
 	}
 
@@ -90,7 +90,7 @@ export async function setPassword(account: Account, newPassword: string): AsyncR
 
 	await updateAccountPassword(account.id, newPassword);
 	terminateAllSessionsForAccount(account.id);
-	audit('account_password_changed', account.id, { ok: true });
+	audit('account_password_changed', account.id, AuditLevel.OK);
 
 	return Ok({ account });
 }
@@ -130,7 +130,7 @@ export async function changeEmail(accountId: string, newEmail: string): AsyncRes
 	const token = createVerifyEmailToken(account.id, account.email);
 	sendEmail(account.email, EMAIL_VERIFY.subject, EMAIL_VERIFY.body(token.id));
 
-	audit('account_email_changed', account.id, { ok: true });
+	audit('account_email_changed', account.id, AuditLevel.OK);
 
 	return Ok(undefined);
 }

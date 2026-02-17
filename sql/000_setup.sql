@@ -21,17 +21,18 @@ CREATE TABLE tokens (
 	payload	TEXT NOT NULL DEFAULT ''  			-- JSON string
 );
 
-DROP TABLE IF EXISTS "account_events";
-CREATE TABLE "account_events" (
+DROP TABLE IF EXISTS "audit_events";
+CREATE TABLE "audit_events" (
 	"id"	INTEGER PRIMARY KEY,
 	"accountId"	TEXT,							-- NULL for system events
 	"type"	TEXT NOT NULL DEFAULT '',			-- event type, e.g. 'account_created', 'account_login_failed'
-	"data"	TEXT NOT NULL DEFAULT '',			-- JSON with ok, message, and additional context
+	"level"	INTEGER NOT NULL DEFAULT 0,			-- severity: 0=ok, 1=info, 2=warn, 3=error, 4=critical
+	"data"	TEXT NOT NULL DEFAULT '',			-- JSON with message and additional context
 	"created"	INTEGER NOT NULL				-- UNIX timestamp
 );
 
-CREATE INDEX IF NOT EXISTS idx_account_events_account ON account_events (accountId, created DESC);
-CREATE INDEX IF NOT EXISTS idx_account_events_type ON account_events (type, created DESC);
+CREATE INDEX IF NOT EXISTS idx_audit_events_account ON audit_events (accountId, created DESC);
+CREATE INDEX IF NOT EXISTS idx_audit_events_type ON audit_events (type, created DESC);
 
 DROP TABLE IF EXISTS "tombstones";
 CREATE TABLE tombstones (

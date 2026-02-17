@@ -2,7 +2,7 @@ import type { HttpBindings } from '@hono/node-server';
 import { type Context, Hono, type Next } from 'hono';
 import type { Account } from '../domain/account.js';
 import type { SessionPayload, SessionToken } from '../domain/token.js';
-import { audit } from '../infrastructure/events.js';
+import { AuditLevel, audit } from '../infrastructure/events.js';
 import { clearPrivilegeElevation, clearSessionCookie, consumeSessionFlash, elevatePrivilege, initSessionCookie, isPrivilegeElevated, setSessionFlash } from '../plugins/server-session.js';
 import { deleteAccountAndCreateTombstone, terminateAllSessionsForAccount } from '../repositories/account-repository.js';
 import { createSessionToken, deleteSessionToken, getSessionTokensForAccount } from '../repositories/token-repository.js';
@@ -248,9 +248,9 @@ app.post('/account/delete', requireAccount, async (c) => {
 
 	const tombstone = deleteAccountAndCreateTombstone(account);
 	if (!tombstone) {
-		audit('account_delete_failed', account.id, { ok: false, message: 'No tombstone returned' });
+		audit('account_delete_failed', account.id, AuditLevel.ERROR, { message: 'No tombstone returned' });
 	} else {
-		audit('account_deleted', account.id, { ok: true });
+		audit('account_deleted', account.id, AuditLevel.OK);
 	}
 
 	clearPrivilegeElevation(c, session);

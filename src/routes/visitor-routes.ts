@@ -4,7 +4,7 @@ import { html } from 'hono/html';
 import type { Account } from '../domain/account.js';
 import type { SessionToken } from '../domain/token.js';
 import { sendEmail } from '../infrastructure/email.js';
-import { audit } from '../infrastructure/events.js';
+import { AuditLevel, audit } from '../infrastructure/events.js';
 import { clearSessionCookie, elevatePrivilege, initSessionCookie } from '../plugins/server-session.js';
 import { getAccount, getAccountByEmail, updateAccount } from '../repositories/account-repository.js';
 import { createPasswordResetToken, createSessionToken, deletePasswordResetToken, getLoginToken, getPasswordResetToken, getVerifyEmailToken, updateLastSessionActivity } from '../repositories/token-repository.js';
@@ -194,7 +194,7 @@ app.post('/reset-password', async (c) => {
 	const token = createPasswordResetToken(account.id, { verifyEmail: account.email, userAgent: c.req.header('User-Agent') || '' });
 	sendEmail(account.email, 'Password reset', `Click the link to reset your password: http://localhost:3000/set-password?token=${token.id}`);
 
-	audit('account_reset_password_requested', account.id, { ok: true, tokenId: token.id });
+	audit('account_reset_password_requested', account.id, AuditLevel.OK, { tokenId: token.id });
 
 	return c.html(PasswordResetRequestSucess());
 });
@@ -260,7 +260,7 @@ app.post('/set-password', async (c) => {
 	if (result.value.account.emailVerified <= 0 && token.payload?.verifyEmail && token.payload.verifyEmail === result.value.account.email) {
 		result.value.account.emailVerified = Date.now();
 		updateAccount(result.value.account);
-		audit('account_email_verified', result.value.account.id, { ok: true });
+		audit('account_email_verified', result.value.account.id, AuditLevel.OK);
 	}
 
 	return c.html(SuccessView({ message: 'Your password has been changed', showAccountButton: true }));
@@ -304,9 +304,9 @@ app.post('/verify-email', async (c) => {
 		account.emailVerified = Date.now();
 		const result = updateAccount(account);
 		if (!result) {
-			audit('system_error', account.id, { ok: false, message: 'Failed to set verified status' });
+			audit('system_error', account.id, AuditLevel.ERROR, { message: 'Failed to set verified status' });
 		} else {
-			audit('account_email_verified', account.id, { ok: true });
+			audit('account_email_verified', account.id, AuditLevel.OK);
 		}
 	}
 

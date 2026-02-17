@@ -20,8 +20,30 @@ export type AuditEventType =
 	| 'cron_cleanup_completed'
 	| 'system_error';
 
+// Severity levels (const int, not enum)
+export const AuditLevel = {
+	OK: 0,
+	INFO: 1,
+	WARN: 2,
+	ERROR: 3,
+	CRITICAL: 4,
+} as const;
+export type AuditLevelValue = (typeof AuditLevel)[keyof typeof AuditLevel];
+
+const levelLabels: Record<AuditLevelValue, string> = {
+	0: 'ok',
+	1: 'info',
+	2: 'warn',
+	3: 'error',
+	4: 'critical',
+};
+
+export function getLevelLabel(level: AuditLevelValue): string {
+	return levelLabels[level] ?? 'unknown';
+}
+
+// Standard data fields - message is expected, rest is flexible
 export interface AuditEventData {
-	ok: boolean;
 	message?: string;
 	[key: string]: unknown;
 }
@@ -30,6 +52,7 @@ export interface AuditEvent {
 	id?: number;
 	accountId: string | null;
 	type: AuditEventType;
+	level: AuditLevelValue;
 	data: AuditEventData;
 	created: number;
 }
@@ -55,8 +78,8 @@ function runHandlers(event: AuditEvent) {
 
 // --- Persistence ---
 function persist(event: AuditEvent): number {
-	const stmt = db.prepare('INSERT INTO account_events (accountId, type, data, created) VALUES (?, ?, ?, ?)');
-	const result = stmt.run(event.accountId, event.type, JSON.stringify(event.data), event.created);
+	const stmt = db.prepare('INSERT INTO audit_events (accountId, type, level, data, created) VALUES (?, ?, ?, ?, ?)');
+	const result = stmt.run(event.accountId, event.type, event.level, JSON.stringify(event.data), event.created);
 	return result.lastInsertRowid as number;
 }
 
@@ -67,11 +90,13 @@ function persist(event: AuditEvent): number {
  *
  * @param type - Event type
  * @param accountId - Account ID, or null for system events
- * @param data - Event data, must include `ok` boolean, optionally `message` for summary
+ * @param level - Severity level (AuditLevel.OK, WARN, ERROR, etc.)
+ * @param data - Event data, optionally `message` for summary
  */
-export function audit(type: AuditEventType, accountId: string | null, data: AuditEventData): void {
+export function audit(type: AuditEventType, accountId: string | null, level: AuditLevelValue, data: AuditEventData = {}): void {
 	// 1. Log immediately (sync) - we want this even if the rest fails
-	const logPrefix = data.ok ? '[audit]' : '[audit] ⚠';
+	const label = getLevelLabel(level);
+	const logPrefix = level >= AuditLevel.WARN ? `[audit] [${label}]` : `[audit]`;
 	console.log(`${logPrefix} ${type}`, { accountId, ...data });
 
 	// 2. Persist and run handlers async (fire-and-forget)
@@ -80,6 +105,7 @@ export function audit(type: AuditEventType, accountId: string | null, data: Audi
 			const event: AuditEvent = {
 				accountId,
 				type,
+				level,
 				data,
 				created: Date.now(),
 			};
@@ -98,6 +124,7 @@ interface AuditEventRow {
 	id: number;
 	accountId: string | null;
 	type: AuditEventType;
+	level: number;
 	data: string;
 	created: number;
 }
@@ -107,6 +134,7 @@ function rowToEvent(row: AuditEventRow): AuditEvent {
 		id: row.id,
 		accountId: row.accountId,
 		type: row.type,
+		level: row.level as AuditLevelValue,
 		data: JSON.parse(row.data),
 		created: row.created,
 	};
@@ -115,19 +143,19 @@ function rowToEvent(row: AuditEventRow): AuditEvent {
 export function getEventsForAccount(accountId: string, options?: { limit?: number; offset?: number }): AuditEvent[] {
 	const limit = options?.limit ?? 50;
 	const offset = options?.offset ?? 0;
-	const rows = db.prepare('SELECT * FROM account_events WHERE accountId = ? ORDER BY created DESC LIMIT ? OFFSET ?').all(accountId, limit, offset) as AuditEventRow[];
+	const rows = db.prepare('SELECT * FROM audit_events WHERE accountId = ? ORDER BY created DESC LIMIT ? OFFSET ?').all(accountId, limit, offset) as AuditEventRow[];
 	return rows.map(rowToEvent);
 }
 
 export function getSystemEvents(options?: { limit?: number; offset?: number }): AuditEvent[] {
 	const limit = options?.limit ?? 50;
 	const offset = options?.offset ?? 0;
-	const rows = db.prepare('SELECT * FROM account_events WHERE accountId IS NULL ORDER BY created DESC LIMIT ? OFFSET ?').all(limit, offset) as AuditEventRow[];
+	const rows = db.prepare('SELECT * FROM audit_events WHERE accountId IS NULL ORDER BY created DESC LIMIT ? OFFSET ?').all(limit, offset) as AuditEventRow[];
 	return rows.map(rowToEvent);
 }
 
 export function countRecentEvents(type: AuditEventType, accountId: string | null, since: number): number {
-	const stmt = accountId === null ? db.prepare('SELECT COUNT(*) as count FROM account_events WHERE type = ? AND accountId IS NULL AND created > ?') : db.prepare('SELECT COUNT(*) as count FROM account_events WHERE type = ? AND accountId = ? AND created > ?');
+	const stmt = accountId === null ? db.prepare('SELECT COUNT(*) as count FROM audit_events WHERE type = ? AND accountId IS NULL AND created > ?') : db.prepare('SELECT COUNT(*) as count FROM audit_events WHERE type = ? AND accountId = ? AND created > ?');
 	const result = (accountId === null ? stmt.get(type, since) : stmt.get(type, accountId, since)) as { count: number };
 	return result.count;
 }
