@@ -4,7 +4,7 @@ import { bearerAuth } from 'hono/bearer-auth';
 import { GlobalConfig } from '../config.js';
 import type { Account } from '../domain/account.js';
 import type { SessionPayload } from '../domain/token.js';
-import { audit } from '../infrastructure/audit.js';
+import { audit } from '../infrastructure/events.js';
 import { deleteExpiredTokens } from '../repositories/cron-repository.js';
 
 type Bindings = HttpBindings & {

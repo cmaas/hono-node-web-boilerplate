@@ -1,7 +1,7 @@
 import type { Account } from '../domain/account.js';
 import { type AsyncResult, Err, Ok } from '../domain/result.js';
-import { audit } from '../infrastructure/audit.js';
 import { EMAIL_VERIFY, sendEmail } from '../infrastructure/email.js';
+import { audit } from '../infrastructure/events.js';
 import { createAccount, getAccount, getAccountByEmail, terminateAllSessionsForAccount, updateAccount, updateAccountPassword } from '../repositories/account-repository.js';
 import { createVerifyEmailToken } from '../repositories/token-repository.js';
 import { isTrivialPassword } from '../repositories/trivial-passwords-repository.js';

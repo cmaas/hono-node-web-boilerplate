@@ -2,7 +2,7 @@ import type { HttpBindings } from '@hono/node-server';
 import { type Context, Hono, type Next } from 'hono';
 import type { Account } from '../domain/account.js';
 import type { SessionPayload, SessionToken } from '../domain/token.js';
-import { audit } from '../infrastructure/audit.js';
+import { audit } from '../infrastructure/events.js';
 import { clearPrivilegeElevation, clearSessionCookie, consumeSessionFlash, elevatePrivilege, initSessionCookie, isPrivilegeElevated, setSessionFlash } from '../plugins/server-session.js';
 import { deleteAccountAndCreateTombstone, terminateAllSessionsForAccount } from '../repositories/account-repository.js';
 import { createSessionToken, deleteSessionToken, getSessionTokensForAccount } from '../repositories/token-repository.js';

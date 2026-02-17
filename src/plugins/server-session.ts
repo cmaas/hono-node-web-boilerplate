@@ -8,7 +8,8 @@ import { deleteSessionToken, getSessionToken, updateTokenPayload } from '../repo
 import { generateSecureToken } from '../utils/util.js';
 
 export function initSessionCookie(c: Context, session: SessionToken) {
-	setCookie(c, 'sid', session.id, { sameSite: 'Lax', path: '/', httpOnly: true });
+	const maxAgeSeconds = Math.floor(GlobalConfig.TIMEOUT_SESSION / 1000);
+	setCookie(c, 'sid', session.id, { sameSite: 'Lax', path: '/', httpOnly: true, maxAge: maxAgeSeconds });
 }
 export function clearSessionCookie(c: Context) {
 	deleteCookie(c, 'sid');
