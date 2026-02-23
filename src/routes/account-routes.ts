@@ -7,7 +7,7 @@ import { clearPrivilegeElevation, clearSessionCookie, consumeSessionFlash, eleva
 import { deleteAccountAndCreateTombstone, terminateAllSessionsForAccount } from '../repositories/account-repository.js';
 import { createSessionToken, deleteSessionToken, getSessionTokensForAccount } from '../repositories/token-repository.js';
 import * as AccountService from '../services/account-service.js';
-import { isSamePassword, isValidEmail } from '../utils/util.js';
+import { isSamePassword, isValidEmail, simpleEscapeEmail, simpleEscapeString } from '../utils/util.js';
 import { AccountView, ChangeEmailForm, ChangePasswordForm } from '../views/account-view.js';
 import { DeleteAccountForm } from '../views/delete-account-view.js';
 import { ElevateView } from '../views/elevate-view.js';
@@ -105,7 +105,7 @@ app.post('/account/request-verification', requireAccount, async (c) => {
 // --- ELEVATE PRIVILEGE ---
 app.get('/account/elevate', requireAccount, (c) => {
 	const session = <SessionToken>c.get('session');
-	const next = (c.req.query('next') || '') as string;
+	const next = simpleEscapeString(c.req.query('next'));
 	if (!ELEVATED_ACTIONS.includes(next as ElevatedAction)) {
 		return c.redirect('/account');
 	}
@@ -119,8 +119,8 @@ app.post('/account/elevate', requireAccount, async (c) => {
 	const account = <Account>c.get('account');
 	const session = <SessionToken>c.get('session');
 	const body = await c.req.parseBody();
-	const next = (<string>body.next || '') as string;
-	const currentPassword = (<string>body.currentPassword || '').trim();
+	const next = simpleEscapeString(body.next);
+	const currentPassword = simpleEscapeString(body.currentPassword);
 
 	if (!ELEVATED_ACTIONS.includes(next as ElevatedAction)) {
 		return c.redirect('/account');
@@ -154,7 +154,7 @@ app.post('/account/change-password', requireAccount, async (c) => {
 	const account = <Account>c.get('account');
 	const session = <SessionToken>c.get('session');
 	const body = await c.req.parseBody();
-	const password = (<string>body.password || '').trim();
+	const password = simpleEscapeString(body.password);
 
 	if (!password) {
 		return c.html(ChangePasswordForm({ values: { password }, errors: [{ field: 'password', message: 'Please provide a new password' }] }));
@@ -177,7 +177,7 @@ app.post('/account/change-password', requireAccount, async (c) => {
 	clearSessionCookie(c);
 
 	// Create new session and elevate privilege (user just proved identity)
-	const newSession = createSessionToken(account.id, { userAgent: c.req.header('User-Agent') || '' });
+	const newSession = createSessionToken(account.id, { userAgent: simpleEscapeString(c.req.header('User-Agent')) });
 	initSessionCookie(c, newSession);
 	elevatePrivilege(c, newSession);
 
@@ -200,7 +200,7 @@ app.post('/account/change-email', requireAccount, async (c) => {
 	const account = <Account>c.get('account');
 	const session = <SessionToken>c.get('session');
 	const body = await c.req.parseBody();
-	const email = (<string>body.email || '').trim();
+	const email = simpleEscapeEmail(body.email);
 
 	if (!email) {
 		return c.html(ChangeEmailForm({ values: { email }, errors: [{ field: 'email', message: 'Please provide a new email address' }] }));
@@ -240,7 +240,7 @@ app.post('/account/delete', requireAccount, async (c) => {
 	const session = <SessionToken>c.get('session');
 	const account = <Account>c.get('account');
 	const body = await c.req.parseBody();
-	const confirm = (<string>body.confirm || '').trim();
+	const confirm = simpleEscapeString(body.confirm);
 
 	if (confirm.toUpperCase() !== 'DELETE') {
 		return c.html(DeleteAccountForm({ values: { confirm }, errors: [{ field: 'confirm', message: 'Please type DELETE to confirm.' }] }));

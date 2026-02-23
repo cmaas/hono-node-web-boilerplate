@@ -25,30 +25,26 @@ export function simpleEscapeNumber(s: any): number | null {
 	return n;
 }
 
-export function simpleEscapeEmail(s: any): string | null {
-	if (typeof s !== 'string') {
-		return null;
-	}
-	const result = s.replaceAll(`'`, '').trim().toLowerCase();
-	return result.length > 0 ? result : null;
+export function simpleEscapeEmail(s: any): string {
+	return simpleEscapeString(s).replaceAll(`'`, '');
 }
 
-export function simpleEscapeString(s: any, maxLen = -1): string | null {
+export function simpleEscapeString(s: any, maxLen = -1): string {
 	if (typeof s !== 'string') {
-		return null;
+		return '';
 	}
 	s = s.trim();
 	if (maxLen > 0 && s.length > maxLen) {
 		s = s.substring(0, maxLen);
 	}
-	return s.length > 0 ? s : null;
+	return s.length > 0 ? s : '';
 }
 
 export function isValidEmail(s: string): boolean {
 	if (!s || typeof s !== 'string') {
 		return false;
 	}
-	const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+	const re = /^(?!\.)(?!.*\.\.)([a-z0-9_'+\-.]*)[a-z0-9_+-]@([a-z0-9][a-z0-9-]*\.)+[a-z]{2,}$/i;
 	return re.test(s);
 }
 

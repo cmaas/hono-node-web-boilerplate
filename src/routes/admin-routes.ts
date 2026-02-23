@@ -4,6 +4,7 @@ import type { Account } from '../domain/account.js';
 import type { SessionPayload } from '../domain/token.js';
 import { getAccount } from '../repositories/account-repository.js';
 import { searchAccounts } from '../repositories/admin-repository.js';
+import { simpleEscapeString } from '../utils/util.js';
 import { AdminAccountDetailsView, AdminView } from '../views/admin-view.js';
 import { ErrorRedirectLogin } from '../views/error-redirect-login.js';
 import { ErrorView } from '../views/generic.js';
@@ -26,7 +27,7 @@ const requireAdminAccount = async (c: Context, next: Next) => {
 };
 
 app.get('/admin', requireAdminAccount, (c) => {
-	const q = c.req.query('q') || '';
+	const q = simpleEscapeString(c.req.query('q'));
 	const pageParam = c.req.query('page');
 	const page = pageParam ? Math.max(1, Number.parseInt(pageParam, 10)) : 1;
 

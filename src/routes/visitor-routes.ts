@@ -9,7 +9,7 @@ import { clearSessionCookie, elevatePrivilege, initSessionCookie } from '../plug
 import { getAccount, getAccountByEmail, updateAccount } from '../repositories/account-repository.js';
 import { createPasswordResetToken, createSessionToken, deletePasswordResetToken, getLoginToken, getPasswordResetToken, getVerifyEmailToken, updateLastSessionActivity } from '../repositories/token-repository.js';
 import * as AccountService from '../services/account-service.js';
-import { isValidEmail, isValidToken } from '../utils/util.js';
+import { isValidEmail, isValidToken, simpleEscapeEmail, simpleEscapeString } from '../utils/util.js';
 import { EmailVerifyForm } from '../views/email-verification.js';
 import { ErrorView, SuccessView } from '../views/generic.js';
 import { LoginForm, LoginWithTokenForm } from '../views/login.js';
@@ -55,8 +55,8 @@ app.post('/login', async (c) => {
 	}
 
 	const body = await c.req.parseBody();
-	const values = { email: (<string>body.email || '').trim() };
-	const password = (<string>body.password || '').trim();
+	const values = { email: simpleEscapeEmail(body.email) };
+	const password = simpleEscapeString(body.password);
 
 	const result = await AccountService.login(values.email, password);
 	if (!result.ok) {
@@ -72,7 +72,7 @@ app.post('/login', async (c) => {
 		}
 	}
 
-	const session = createSessionToken(result.value.account.id, { userAgent: c.req.header('User-Agent') || '' });
+	const session = createSessionToken(result.value.account.id, { userAgent: simpleEscapeString(c.req.header('User-Agent')) });
 	initSessionCookie(c, session);
 	elevatePrivilege(c, session);
 
@@ -94,7 +94,7 @@ app.post('/login/t', async (c) => {
 	}
 
 	const body = await c.req.parseBody();
-	const values = { token: (<string>body.token || '').trim() };
+	const values = { token: simpleEscapeString(body.token) };
 
 	if (!isValidToken(values.token)) {
 		return c.html(LoginWithTokenForm({ values, errors: [{ field: 'token', message: 'Please provide a valid token' }] }));
@@ -116,7 +116,7 @@ app.post('/login/t', async (c) => {
 		updateAccount(account);
 	}
 
-	const session = createSessionToken(account.id, { userAgent: c.req.header('User-Agent') || '' });
+	const session = createSessionToken(account.id, { userAgent: simpleEscapeString(c.req.header('User-Agent')) });
 	initSessionCookie(c, session);
 	elevatePrivilege(c, session); // depending on the use case, you might want to NOT elevate privilges when using a login token
 
@@ -137,7 +137,7 @@ app.post('/signup', async (c) => {
 	}
 
 	const body = await c.req.parseBody();
-	const values = { email: (<string>body.email || '').trim(), password: (<string>body.password || '').trim() };
+	const values = { email: simpleEscapeEmail(body.email), password: simpleEscapeString(body.password) };
 
 	const result = await AccountService.signup(values.email, values.password);
 	if (!result.ok) {
@@ -157,7 +157,7 @@ app.post('/signup', async (c) => {
 		}
 	}
 
-	const session = createSessionToken(result.value.account.id, { userAgent: c.req.header('User-Agent') || '' });
+	const session = createSessionToken(result.value.account.id, { userAgent: simpleEscapeString(c.req.header('User-Agent')) });
 	initSessionCookie(c, session);
 	elevatePrivilege(c, session);
 
@@ -181,7 +181,7 @@ app.get('/reset-password', (c) => {
  */
 app.post('/reset-password', async (c) => {
 	const body = await c.req.parseBody();
-	const values = { email: (<string>body.email || '').trim() };
+	const values = { email: simpleEscapeEmail(body.email) };
 
 	if (!isValidEmail(values.email)) {
 		return c.html(PasswordResetRequestForm({ values, errors: [{ field: 'email', message: 'Please provide a valid email address' }] }));
@@ -191,7 +191,7 @@ app.post('/reset-password', async (c) => {
 		return c.html(PasswordResetRequestForm({ values, errors: [{ field: 'email', message: 'There is no account with this email address' }] }));
 	}
 
-	const token = createPasswordResetToken(account.id, { verifyEmail: account.email, userAgent: c.req.header('User-Agent') || '' });
+	const token = createPasswordResetToken(account.id, { verifyEmail: account.email, userAgent: simpleEscapeString(c.req.header('User-Agent')) });
 	sendEmail(account.email, 'Password reset', `Click the link to reset your password: http://localhost:3000/set-password?token=${token.id}`);
 
 	audit('account_reset_password_requested', account.id, AuditLevel.OK, { tokenId: token.id });
@@ -221,7 +221,7 @@ app.get('/set-password', (c) => {
  */
 app.post('/set-password', async (c) => {
 	const body = await c.req.parseBody();
-	const values = { id: <string>body.token || '', password: (<string>body.password || '').trim() };
+	const values = { id: simpleEscapeString(body.token), password: simpleEscapeString(body.password) };
 	if (!isValidToken(values.id)) {
 		return c.html(ErrorView({ message: 'Invalid password reset token' }));
 	}
@@ -252,7 +252,7 @@ app.post('/set-password', async (c) => {
 	clearSessionCookie(c);
 
 	// log the user in directly after password reset
-	const session = createSessionToken(result.value.account.id, { userAgent: c.req.header('User-Agent') || '' });
+	const session = createSessionToken(result.value.account.id, { userAgent: simpleEscapeString(c.req.header('User-Agent')) });
 	initSessionCookie(c, session);
 	elevatePrivilege(c, session);
 
