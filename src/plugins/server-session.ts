@@ -9,7 +9,7 @@ import { generateSecureToken } from '../utils/util.js';
 
 export function initSessionCookie(c: Context, session: SessionToken) {
 	const maxAgeSeconds = Math.floor(GlobalConfig.TIMEOUT_SESSION / 1000);
-	setCookie(c, 'sid', session.id, { sameSite: 'Lax', path: '/', httpOnly: true, maxAge: maxAgeSeconds, secure: GlobalConfig.SECURE_COOKIE, domain: GlobalConfig.COOKIE_DOMAIN });
+	setCookie(c, 'sid', session.id, { sameSite: 'Lax', path: '/', httpOnly: true, maxAge: maxAgeSeconds, secure: GlobalConfig.SECURE_COOKIE });
 }
 export function clearSessionCookie(c: Context) {
 	deleteCookie(c, 'sid');
