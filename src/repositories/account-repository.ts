@@ -4,7 +4,7 @@ import { db } from '../infrastructure/db.js';
 import { generateSecureToken, hashPassword } from '../utils/util.js';
 
 export function getAccountByEmail(email: string): Account | null {
-	const row = <Account>db.prepare('SELECT * FROM accounts WHERE email = ?').get(email);
+	const row = <Account>db.prepare('SELECT * FROM accounts WHERE email COLLATE NOCASE = ?').get(email);
 	if (!row) {
 		return null;
 	}
