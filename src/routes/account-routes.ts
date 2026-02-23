@@ -14,9 +14,7 @@ import { ElevateView } from '../views/elevate-view.js';
 import { ErrorRedirectLogin } from '../views/error-redirect-login.js';
 import { ErrorView, SuccessView } from '../views/generic.js';
 
-type Bindings = HttpBindings & {
-	/* ... */
-};
+type Bindings = HttpBindings & {};
 
 const ELEVATED_ACTIONS = ['change-password', 'change-email', 'delete'] as const;
 type ElevatedAction = (typeof ELEVATED_ACTIONS)[number];

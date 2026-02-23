@@ -7,9 +7,7 @@ import type { SessionTokenPayload } from '../domain/token.js';
 import { AuditLevel, audit } from '../infrastructure/events.js';
 import { deleteExpiredTokens } from '../repositories/cron-repository.js';
 
-type Bindings = HttpBindings & {
-	/* ... */
-};
+type Bindings = HttpBindings & {};
 
 const app = new Hono<{ Bindings: Bindings; Variables: { session: SessionTokenPayload; account: Account } }>();
 

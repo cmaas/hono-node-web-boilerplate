@@ -22,9 +22,7 @@ import adminApp from './routes/admin-routes.js';
 import cronApp from './routes/cron-routes.js';
 import visitorApp from './routes/visitor-routes.js';
 
-type Bindings = HttpBindings & {
-	/* ... */
-};
+type Bindings = HttpBindings & {};
 
 // --- SETUP ---
 const app = new Hono<{ Bindings: Bindings; Variables: { session: SessionToken; account: Account } }>();

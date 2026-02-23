@@ -9,9 +9,7 @@ import { AdminAccountDetailsView, AdminView } from '../views/admin-view.js';
 import { ErrorRedirectLogin } from '../views/error-redirect-login.js';
 import { ErrorView } from '../views/generic.js';
 
-type Bindings = HttpBindings & {
-	/* ... */
-};
+type Bindings = HttpBindings & {};
 
 const app = new Hono<{ Bindings: Bindings; Variables: { session: SessionTokenPayload; account: Account } }>();
 

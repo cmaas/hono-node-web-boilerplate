@@ -17,9 +17,7 @@ import { Main } from '../views/main.js';
 import { NewPasswordForm, PasswordResetRequestForm, PasswordResetRequestSucess } from '../views/password-reset.js';
 import { SignupForm } from '../views/signup.js';
 
-type Bindings = HttpBindings & {
-	/* ... */
-};
+type Bindings = HttpBindings & {};
 
 const app = new Hono<{ Bindings: Bindings; Variables: { session: SessionToken; account: Account } }>();
 
