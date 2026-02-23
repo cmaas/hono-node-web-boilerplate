@@ -13,6 +13,7 @@ import { type HttpBindings, serve } from '@hono/node-server';
 import { serveStatic } from '@hono/node-server/serve-static';
 import { Hono } from 'hono';
 import { logger } from 'hono/logger';
+import { GlobalConfig } from './config.js';
 import type { Account } from './domain/account.js';
 import type { SessionToken } from './domain/token.js';
 import { sessionMiddleware } from './plugins/server-session.js';
@@ -29,7 +30,7 @@ type Bindings = HttpBindings & {
 const app = new Hono<{ Bindings: Bindings; Variables: { session: SessionToken; account: Account } }>();
 app.use(logger());
 app.use('*', sessionMiddleware());
-app.use('/public/*', serveStatic({ root: './' }));
+app.use('/*', serveStatic({ root: './public' }));
 
 app.onError((err, c) => {
 	console.error('[app.onError]', err);
@@ -47,7 +48,7 @@ export { app };
 
 // Only start the server if this file is run directly
 if (import.meta.url === `file://${process.argv[1]}`) {
-	const port = 3000;
+	const port = GlobalConfig.SERVER_PORT;
 	console.log(`Server started: ${new Date().toLocaleString()}, running on http://localhost:${port}`);
 
 	serve({

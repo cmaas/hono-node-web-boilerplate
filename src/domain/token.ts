@@ -13,7 +13,7 @@ export interface TokenDTO extends Omit<Token<string>, 'payload'> {
 	payload: string;
 }
 
-export interface SessionPayload {
+export interface SessionTokenPayload {
 	userAgent?: string;
 	lastActivity?: number; // UNIX timestamp in milliseconds
 	previousVisit?: number; // UNIX timestamp in milliseconds
@@ -22,11 +22,11 @@ export interface SessionPayload {
 	flash?: { type: 'success' | 'error' | 'info'; message: string };
 }
 
-export interface VerifyEmailPayload {
+export interface VerifyEmailTokenPayload {
 	email: string;
 }
 
-export interface PasswordResetPayload {
+export interface PasswordResetTokenPayload {
 	verifyEmail: string;
 	userAgent?: string;
 }
@@ -36,7 +36,7 @@ export interface LoginTokenPayload {
 	userAgent?: string;
 }
 
-export type SessionToken = Token<SessionPayload>;
-export type VerifyEmailToken = Token<VerifyEmailPayload>;
-export type PasswordResetToken = Token<PasswordResetPayload>;
+export type SessionToken = Token<SessionTokenPayload>;
+export type VerifyEmailToken = Token<VerifyEmailTokenPayload>;
+export type PasswordResetToken = Token<PasswordResetTokenPayload>;
 export type LoginToken = Token<LoginTokenPayload>;

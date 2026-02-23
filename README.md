@@ -26,7 +26,7 @@ sqlite3 mydata.db < spec/data.sql
 
 Init a new .env file:
 ```bash
-echo "CRON_API_TOKEN=\"$(openssl rand -hex 32)\"" > .env
+echo "CRON_API_KEY=\"$(openssl rand -hex 32)\"" > .env
 ```
 
 Then start the Hono Node server via:
@@ -50,6 +50,11 @@ Open [localhost:3000](http://localhost:3000/) in your browser and sign up a new 
 
 
 ## Changelog
+
+### 1.6.0 (2026-02-23)
+- Added: seed.sql to automatically seed a DB with required data
+- Changed: lots of small changes and improvements
+
 
 ### 1.5.0 (2026-02-17)
 - Refactored `audit()` function to use `level` and removed `ok` from `data` prop

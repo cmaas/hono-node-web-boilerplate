@@ -1,6 +1,6 @@
 {
 	"name": "hono-node-web-boilerplate",
-	"version": "1.5.0",
+	"version": "1.6.0",
 	"description": "A small boilerplate / starter project for Hono on Node.js with SQLite, server-side template rendering using Hono's html and basic account functionality.",
 	"keywords": [
 		"hono",
@@ -27,12 +27,12 @@
 		"@hono/node-server": "1.19.9",
 		"bcryptjs": "3.0.3",
 		"better-sqlite3": "12.6.2",
-		"hono": "4.11.9"
+		"hono": "4.12.2"
 	},
 	"devDependencies": {
 		"@types/better-sqlite3": "7.6.13",
-		"@types/node": "25.2.2",
-		"@typescript/native-preview": "^7.0.0-dev.20260210.1",
+		"@types/node": "25.3.0",
+		"@typescript/native-preview": "^7.0.0-dev.20260223.1",
 		"tsx": "4.21.0"
 	}
 }
