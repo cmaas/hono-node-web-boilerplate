@@ -1,7 +1,7 @@
 import type { HttpBindings } from '@hono/node-server';
 import { type Context, Hono, type Next } from 'hono';
 import type { Account } from '../domain/account.js';
-import type { SessionPayload } from '../domain/token.js';
+import type { SessionTokenPayload } from '../domain/token.js';
 import { getAccount } from '../repositories/account-repository.js';
 import { searchAccounts } from '../repositories/admin-repository.js';
 import { simpleEscapeString } from '../utils/util.js';
@@ -13,7 +13,7 @@ type Bindings = HttpBindings & {
 	/* ... */
 };
 
-const app = new Hono<{ Bindings: Bindings; Variables: { session: SessionPayload; account: Account } }>();
+const app = new Hono<{ Bindings: Bindings; Variables: { session: SessionTokenPayload; account: Account } }>();
 
 const requireAdminAccount = async (c: Context, next: Next) => {
 	const account = c.get('account');

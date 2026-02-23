@@ -1,7 +1,7 @@
 import type { HttpBindings } from '@hono/node-server';
 import { type Context, Hono, type Next } from 'hono';
 import type { Account } from '../domain/account.js';
-import type { SessionPayload, SessionToken } from '../domain/token.js';
+import type { SessionToken, SessionTokenPayload } from '../domain/token.js';
 import { AuditLevel, audit } from '../infrastructure/events.js';
 import { clearPrivilegeElevation, clearSessionCookie, consumeSessionFlash, elevatePrivilege, initSessionCookie, isPrivilegeElevated, setSessionFlash } from '../plugins/server-session.js';
 import { deleteAccountAndCreateTombstone, terminateAllSessionsForAccount } from '../repositories/account-repository.js';
@@ -21,7 +21,7 @@ type Bindings = HttpBindings & {
 const ELEVATED_ACTIONS = ['change-password', 'change-email', 'delete'] as const;
 type ElevatedAction = (typeof ELEVATED_ACTIONS)[number];
 
-const app = new Hono<{ Bindings: Bindings; Variables: { session: SessionPayload; account: Account } }>();
+const app = new Hono<{ Bindings: Bindings; Variables: { session: SessionTokenPayload; account: Account } }>();
 
 // Middleware to require a logged-in account
 export const requireAccount = async (c: Context, next: Next) => {

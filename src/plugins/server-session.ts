@@ -2,14 +2,14 @@ import type { Context } from 'hono';
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
 import type { MiddlewareHandler } from 'hono/types';
 import { GlobalConfig } from '../config.js';
-import type { SessionPayload, SessionToken } from '../domain/token.js';
+import type { SessionToken, SessionTokenPayload } from '../domain/token.js';
 import { getAccount } from '../repositories/account-repository.js';
 import { deleteSessionToken, getSessionToken, updateTokenPayload } from '../repositories/token-repository.js';
 import { generateSecureToken } from '../utils/util.js';
 
 export function initSessionCookie(c: Context, session: SessionToken) {
 	const maxAgeSeconds = Math.floor(GlobalConfig.TIMEOUT_SESSION / 1000);
-	setCookie(c, 'sid', session.id, { sameSite: 'Lax', path: '/', httpOnly: true, maxAge: maxAgeSeconds });
+	setCookie(c, 'sid', session.id, { sameSite: 'Lax', path: '/', httpOnly: true, maxAge: maxAgeSeconds, secure: GlobalConfig.SECURE_COOKIE, domain: GlobalConfig.COOKIE_DOMAIN });
 }
 export function clearSessionCookie(c: Context) {
 	deleteCookie(c, 'sid');
@@ -30,7 +30,7 @@ export function elevatePrivilege(c: Context, session: SessionToken): void {
 	}
 	session.payload.privilegeElevationToken = token;
 	session.payload.privilegeElevatedAt = now;
-	updateTokenPayload<SessionPayload>(session.id, 'session', session.payload);
+	updateTokenPayload<SessionTokenPayload>(session.id, 'session', session.payload);
 
 	// Set short-lived privilege cookie
 	const maxAgeSeconds = Math.floor(GlobalConfig.TIMEOUT_PRIVILEGE_ELEVATION / 1000);
@@ -49,7 +49,7 @@ export function clearPrivilegeElevation(c: Context, session: SessionToken): void
 	if (session.payload) {
 		delete session.payload.privilegeElevationToken;
 		delete session.payload.privilegeElevatedAt;
-		updateTokenPayload<SessionPayload>(session.id, 'session', session.payload);
+		updateTokenPayload<SessionTokenPayload>(session.id, 'session', session.payload);
 	}
 	deleteCookie(c, 'priv', { sameSite: 'Strict', path: '/', httpOnly: true });
 }
@@ -102,18 +102,19 @@ export function setSessionFlash(session: SessionToken, flash: { type: 'success' 
 		session.payload = {};
 	}
 	session.payload.flash = flash;
-	updateTokenPayload<SessionPayload>(session.id, 'session', session.payload);
+	updateTokenPayload<SessionTokenPayload>(session.id, 'session', session.payload);
 }
 
 /**
  * Read and clear the flash message from the session. Returns null if no flash is set.
  */
 export function consumeSessionFlash(session: SessionToken): { type: 'success' | 'error' | 'info'; message: string } | null {
-	const flash = session.payload?.flash ?? null;
-	if (flash) {
-		delete session.payload?.flash;
-		updateTokenPayload<SessionPayload>(session.id, 'session', session.payload!);
+	if (!session.payload || !session.payload.flash) {
+		return null;
 	}
+	const flash = session.payload.flash;
+	delete session.payload.flash;
+	updateTokenPayload<SessionTokenPayload>(session.id, 'session', session.payload);
 	return flash;
 }
 

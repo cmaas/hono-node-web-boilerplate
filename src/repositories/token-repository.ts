@@ -1,5 +1,5 @@
 import { GlobalConfig } from '../config.js';
-import type { LoginToken, LoginTokenPayload, PasswordResetPayload, PasswordResetToken, SessionPayload, SessionToken, Token, TokenDTO, TokenType, VerifyEmailPayload, VerifyEmailToken } from '../domain/token.js';
+import type { LoginToken, LoginTokenPayload, PasswordResetToken, PasswordResetTokenPayload, SessionToken, SessionTokenPayload, Token, TokenDTO, TokenType, VerifyEmailToken, VerifyEmailTokenPayload } from '../domain/token.js';
 import { db } from '../infrastructure/db.js';
 import { generateSecureToken } from '../utils/util.js';
 
@@ -59,10 +59,10 @@ export function deleteRawToken(id: string, type: TokenType): void {
 // ----- Session Tokens -----
 export function createSessionToken(accountId: string, payload: { userAgent: string }): SessionToken {
 	const expires = Date.now() + GlobalConfig.TIMEOUT_SESSION;
-	return createRawToken<SessionPayload>(accountId, expires, 'session', payload);
+	return createRawToken<SessionTokenPayload>(accountId, expires, 'session', payload);
 }
 export function getSessionToken(id: string): SessionToken | null {
-	return getRawToken<SessionPayload>(id, 'session');
+	return getRawToken<SessionTokenPayload>(id, 'session');
 }
 export function getSessionTokensForAccount(accountId: string): Array<SessionToken> {
 	const rows = <Array<SessionToken>>db.prepare('SELECT * FROM tokens WHERE accountId = ? AND type = ?').all(accountId, 'session');
@@ -70,7 +70,7 @@ export function getSessionTokensForAccount(accountId: string): Array<SessionToke
 		return [];
 	}
 	const tokens = rows.map((row) => {
-		const payload = unmarshallPayload<SessionPayload>(row.payload as any);
+		const payload = unmarshallPayload<SessionTokenPayload>(row.payload as any);
 		row.payload = payload;
 		return row;
 	});
@@ -83,22 +83,22 @@ export function deleteSessionToken(id: string): void {
 // ----- Verify Email Tokens -----
 export function createVerifyEmailToken(accountId: string, email: string): VerifyEmailToken {
 	const expires = Date.now() + GlobalConfig.TIMEOUT_VERIFY_EMAIL;
-	return createRawToken<VerifyEmailPayload>(accountId, expires, 'verifyEmail', { email });
+	return createRawToken<VerifyEmailTokenPayload>(accountId, expires, 'verifyEmail', { email });
 }
 export function getVerifyEmailToken(id: string): VerifyEmailToken | null {
-	return getRawToken<VerifyEmailPayload>(id, 'verifyEmail');
+	return getRawToken<VerifyEmailTokenPayload>(id, 'verifyEmail');
 }
 export function deleteVerifyEmailToken(id: string): void {
 	deleteRawToken(id, 'verifyEmail');
 }
 
 // ----- Password Reset Tokens -----
-export function createPasswordResetToken(accountId: string, payload: PasswordResetPayload): PasswordResetToken {
+export function createPasswordResetToken(accountId: string, payload: PasswordResetTokenPayload): PasswordResetToken {
 	const expires = Date.now() + GlobalConfig.TIMEOUT_PASSWORD_RESET;
-	return createRawToken<PasswordResetPayload>(accountId, expires, 'passwordReset', payload);
+	return createRawToken<PasswordResetTokenPayload>(accountId, expires, 'passwordReset', payload);
 }
 export function getPasswordResetToken(id: string): PasswordResetToken | null {
-	return getRawToken<PasswordResetPayload>(id, 'passwordReset');
+	return getRawToken<PasswordResetTokenPayload>(id, 'passwordReset');
 }
 export function deletePasswordResetToken(id: string): void {
 	deleteRawToken(id, 'passwordReset');
@@ -135,11 +135,11 @@ export function updateLastSessionActivity(session: SessionToken | null): void {
 	const now = Date.now();
 	const lastActivity = session.payload.lastActivity || 0;
 
-	if (lastActivity > 0 && lastActivity < now - GlobalConfig.TIMEOUT_INACTIVITY_LAST_VISIT_REFRESH) {
-		console.debug(`updateLastSessionActivity: updating previousVisit for session ${session.id}: ${new Date(lastActivity).toISOString()}`);
+	if (lastActivity > 0 && lastActivity < now - GlobalConfig.LAST_VISIT_REFRESH_AFTER_INACTIVITY) {
+		//console.debug(`updateLastSessionActivity: updating previousVisit for session ${session.id}: ${new Date(lastActivity).toISOString()}`);
 		session.payload.previousVisit = lastActivity;
 	}
 
 	session.payload.lastActivity = now;
-	updateTokenPayload<SessionPayload>(session.id, 'session', session.payload);
+	updateTokenPayload<SessionTokenPayload>(session.id, 'session', session.payload);
 }
